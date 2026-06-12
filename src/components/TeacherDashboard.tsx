@@ -63,7 +63,6 @@ export default function TeacherDashboard({
   const [newCat, setNewCat] = useState('Math');
   const [notification, setNotification] = useState<string | null>(null);
 
-  // New states for Attendance Checker and Student Analytics tabs
   const [activeTab, setActiveTab] = useState<'overview' | 'attendance' | 'analytics' | 'content'>('overview');
   const [filterSubject, setFilterSubject] = useState('Mathematics');
   const [filterSection, setFilterSection] = useState('Section A');
@@ -73,9 +72,6 @@ export default function TeacherDashboard({
   
   const [localRecords, setLocalRecords] = useState<Record<string, 'present' | 'absent' | 'late'>>({});
 
-  // ─── Lesson Builder States ────────────────────────────────────────────────
-  // Derive the list of subjects this teacher is allowed to publish for.
-  // Falls back to all ALS subjects if teacher has no subjects assigned.
   const teacherSubjects: LessonCategory[] = (() => {
     const assigned = (currentUser?.subjects ?? []).filter(
       (s): s is LessonCategory => ALL_ALS_SUBJECTS.includes(s as LessonCategory)
@@ -106,7 +102,6 @@ export default function TeacherDashboard({
     }
   ]);
 
-  // Slide handlers
   const handleAddSlide = () => {
     const nextIdx = builderSlides.length + 1;
     setBuilderSlides(prev => [
@@ -137,7 +132,6 @@ export default function TeacherDashboard({
     setNotification('Reordered textbook slides.');
   };
 
-  // Quiz handlers
   const handleAddQuiz = () => {
     const nextIdx = builderQuizzes.length + 1;
     setBuilderQuizzes(prev => [
@@ -174,7 +168,6 @@ export default function TeacherDashboard({
     setNotification('Reordered quiz question hierarchy.');
   };
 
-  // Publish lesson handler — teachers always publish to students
   const handlePublishLesson = (e: React.FormEvent) => {
     e.preventDefault();
     const uploadedBy = currentUser?.name ?? 'Teacher';
@@ -271,9 +264,6 @@ export default function TeacherDashboard({
     setTimeout(() => setNotification(null), 4500);
   };
 
-  // ─── Existing Handlers ────────────────────────────────────────────────────
-
-  // Synchronize local records when filters or database logs update
   React.useEffect(() => {
     const existing = attendance.find(
       a => a.subject === filterSubject && a.section === filterSection && a.date === filterDate
@@ -412,7 +402,6 @@ export default function TeacherDashboard({
     }, 4000);
   };
 
-  // My published lessons — filtered to this teacher's own content
   const myLessons = lessons.filter(l => l.uploadedBy === (currentUser?.name ?? 'Teacher'));
 
   return (
@@ -442,7 +431,7 @@ export default function TeacherDashboard({
         </div>
       </div>
 
-      {/* Dispatched Notification Alert */}
+      {/* Notification Alert */}
       {notification && (
         <div className="bg-slate-900 text-white p-4 rounded-xl flex items-center gap-3 shadow-md animate-in fade-in slide-in-from-top duration-300">
           <span className="material-symbols-outlined text-[#FF9800]">verified</span>
@@ -450,13 +439,13 @@ export default function TeacherDashboard({
         </div>
       )}
 
-      {/* Navigation Tab Bar */}
+      {/* ── Tab Bar (FIXED) ── */}
       <div className="flex border-b border-slate-200 gap-1 pb-px overflow-x-auto scrollbar-none">
         <button
           onClick={() => setActiveTab('overview')}
           className={`px-5 py-2.5 font-black text-xs uppercase tracking-wider transition-all border-b-2 cursor-pointer flex items-center gap-2 ${
             activeTab === 'overview'
-              ? 'border-indigo-600 text-indigo-600 font-black'
+              ? 'border-indigo-600 text-indigo-600'
               : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
           }`}
         >
@@ -467,7 +456,7 @@ export default function TeacherDashboard({
           onClick={() => setActiveTab('attendance')}
           className={`px-5 py-2.5 font-black text-xs uppercase tracking-wider transition-all border-b-2 cursor-pointer flex items-center gap-2 ${
             activeTab === 'attendance'
-              ? 'border-indigo-600 text-indigo-600 font-black'
+              ? 'border-indigo-600 text-indigo-600'
               : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
           }`}
         >
@@ -478,7 +467,7 @@ export default function TeacherDashboard({
           onClick={() => setActiveTab('analytics')}
           className={`px-5 py-2.5 font-black text-xs uppercase tracking-wider transition-all border-b-2 cursor-pointer flex items-center gap-2 ${
             activeTab === 'analytics'
-              ? 'border-indigo-600 text-indigo-600 font-black'
+              ? 'border-indigo-600 text-indigo-600'
               : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
           }`}
         >
@@ -489,154 +478,88 @@ export default function TeacherDashboard({
           onClick={() => setActiveTab('content')}
           className={`px-5 py-2.5 font-black text-xs uppercase tracking-wider transition-all border-b-2 cursor-pointer flex items-center gap-2 ${
             activeTab === 'content'
-              ? 'border-indigo-600 text-indigo-600 font-black'
+              ? 'border-indigo-600 text-indigo-600'
               : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
           }`}
         >
           <span className="material-symbols-outlined text-[18px]">edit_note</span>
-          Lesson Builder
+          Content Builder
         </button>
       </div>
 
-      {/* Overview Tab Content */}
+      {/* ── Overview Tab ── */}
       {activeTab === 'overview' && (
         <>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in duration-200">
+          {/* Quick System Alerts */}
+          <div className="space-y-4 animate-in fade-in duration-200">
+            <h3 className="text-sm font-black text-[#526069] uppercase tracking-wider">Quick Alerts</h3>
             
-            {/* Left Column: Quick Alerts & Superintendent Directives */}
-            <div className="lg:col-span-1 space-y-6">
-              {/* Quick System Alerts */}
-              <div className="space-y-4">
-                <h3 className="text-sm font-black text-[#526069] uppercase tracking-wider">Quick Alerts</h3>
-                
-                <div className="space-y-3">
-                  {MOCK_STUDENT_ALERTS.map((alt) => (
-                    <div 
-                      key={alt.id}
-                      className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex items-start gap-4 hover:shadow-md transition-shadow"
-                    >
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                        alt.type === 'pending' ? 'bg-amber-50 text-amber-600' :
-                        alt.type === 'post' ? 'bg-blue-50 text-blue-600' :
-                        'bg-indigo-50 text-indigo-700'
-                      }`}>
-                        <span className="material-symbols-outlined text-[22px]">{alt.icon}</span>
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <h4 className="font-extrabold text-xs text-slate-800 leading-tight truncate">{alt.title}</h4>
-                        <p className="text-[11px] text-slate-400 mt-0.5 truncate">{alt.description}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Superintendent Directives / Supabase Blueprints card */}
-              <div className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm space-y-4">
-                <div className="flex items-center gap-2 border-b border-slate-150 pb-2.5">
-                  <span className="material-symbols-outlined text-indigo-600">security</span>
-                  <div>
-                    <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider block">Superintendent Directives</h3>
-                    <p className="text-[10px] text-slate-400 font-semibold block leading-tight">Supabase Bucket blueprints assigned to you</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {MOCK_STUDENT_ALERTS.map((alt) => (
+                <div 
+                  key={alt.id}
+                  className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex items-start gap-4 hover:shadow-md transition-shadow"
+                >
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                    alt.type === 'pending' ? 'bg-amber-50 text-amber-600' :
+                    alt.type === 'post' ? 'bg-blue-50 text-blue-600' :
+                    'bg-indigo-50 text-indigo-700'
+                  }`}>
+                    <span className="material-symbols-outlined text-[22px]">{alt.icon}</span>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h4 className="font-extrabold text-xs text-slate-800 leading-tight truncate">{alt.title}</h4>
+                    <p className="text-[11px] text-slate-400 mt-0.5 truncate">{alt.description}</p>
                   </div>
                 </div>
-
-                {lessons.filter(l => l.assignedTo?.includes('Teachers')).length === 0 ? (
-                  <div className="text-center py-6 text-slate-400">
-                    <span className="material-symbols-outlined text-2xl opacity-60 block">settings_backup_restore</span>
-                    <p className="text-[11px] font-semibold mt-1">No active blueprints currently released.</p>
-                    <p className="text-[9px] text-slate-500 mt-0.5">Admin Superintendent has yet to assign custom Supabase documents to this workspace.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {lessons.filter(l => l.assignedTo?.includes('Teachers')).map((l) => (
-                      <div key={l.id} className="p-3 bg-slate-50 rounded-lg hover:bg-slate-100/50 border border-slate-150 transition-colors space-y-2">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-[10px] bg-indigo-50 text-indigo-700 font-extrabold px-1.5 py-0.5 rounded uppercase">
-                            {l.category}
-                          </span>
-                          <span className="text-[9px] text-slate-450 font-bold">
-                            {l.duration} limit
-                          </span>
-                        </div>
-                        <h4 className="font-extrabold text-xs text-slate-800 block truncate leading-tight" title={l.title}>
-                          {l.title}
-                        </h4>
-                        <p className="text-[10px] text-slate-500 line-clamp-2 leading-relaxed">
-                          {l.description}
-                        </p>
-                        
-                        {l.bucketUrl && (
-                          <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between">
-                            <span className="text-[9px] text-slate-450 font-mono truncate">Supabase Bucket link</span>
-                            <a 
-                              href={l.bucketUrl} 
-                              target="_blank" 
-                              rel="noreferrer" 
-                              className="text-[10px] text-indigo-600 font-extrabold flex items-center hover:underline cursor-pointer"
-                            >
-                              Open Booklet
-                              <span className="material-symbols-outlined text-sm ml-0.5">open_in_new</span>
-                            </a>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              ))}
             </div>
-
-            {/* Dynamic Student Insights - Right Columns */}
-            <div className="lg:col-span-2 space-y-4">
-              <h3 className="text-sm font-black text-[#526069] uppercase tracking-wider">Student Insights & Alerts</h3>
-              
-              <div className="space-y-3">
-                {insights.map((ins) => (
-                  <div 
-                    key={ins.id}
-                    className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-slate-250 transition-all"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 border border-slate-200">
-                        <img src={ins.avatarUrl} alt={ins.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                      </div>
-                      <div>
-                        <h4 className="font-black text-sm text-slate-800">{ins.name}</h4>
-                        <p className="text-xs text-indigo-700 font-bold mt-0.5">{ins.subject}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className={`w-2 h-2 rounded-full ${ins.statusType === 'struggling' ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`}></span>
-                          <span className="text-[11px] font-semibold text-slate-500">{ins.status}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-4 shrink-0 sm:self-center">
-                      <div className="text-center sm:text-right">
-                        <span className="text-xs font-bold text-slate-400 block uppercase">Quiz Score</span>
-                        <span className={`text-base font-extrabold block ${ins.statusType === 'struggling' ? 'text-amber-600' : 'text-emerald-600'}`}>
-                          {ins.score}%
-                        </span>
-                      </div>
-
-                      {ins.statusType === 'struggling' && (
-                        <button 
-                          onClick={() => handleSendHelp(ins.name, ins.subject)}
-                          className="bg-[#9C27B0] hover:bg-[#8e24aa] text-white font-bold text-xs px-4 py-2 rounded-lg transition-all active:scale-95 shadow-sm inline-flex items-center gap-1.5 cursor-pointer"
-                        >
-                          <span className="material-symbols-outlined text-[15px]">send</span>
-                          Send Help
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
           </div>
 
-          {/* Curriculum Resource Builder Section & Module Draft */}
+          {/* Student Insights */}
+          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+              <div>
+                <h3 className="text-lg font-black text-slate-800">Student Insights</h3>
+                <p className="text-xs text-slate-400 mt-0.5">Live performance tracking and intervention tools.</p>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              {insights.map((item) => (
+                <div key={item.name} className="p-4 bg-slate-50 border border-slate-100 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-10 h-10 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 font-bold flex items-center justify-center text-sm uppercase shrink-0">
+                      {item.name.split(' ').map((n: string) => n[0]).join('')}
+                    </div>
+                    <div>
+                      <h4 className="font-extrabold text-xs text-slate-800 leading-none">{item.name}</h4>
+                      <p className="text-[10.5px] text-slate-400 mt-1">{item.subject} — Score: {item.score}%</p>
+                      <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-md mt-1 inline-block ${
+                        item.statusType === 'mastered' ? 'bg-emerald-100 text-emerald-700' :
+                        item.statusType === 'struggling' ? 'bg-rose-100 text-rose-700' :
+                        'bg-amber-100 text-amber-700'
+                      }`}>{item.status}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 self-start sm:self-center">
+                    {item.statusType === 'struggling' && (
+                      <button
+                        type="button"
+                        onClick={() => handleSendHelp(item.name, item.subject)}
+                        className="bg-[#9C27B0] hover:bg-[#8e24aa] text-white font-extrabold text-[10.5px] px-3.5 py-2 rounded-lg transition-all active:scale-95 shadow-sm inline-flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <span className="material-symbols-outlined text-[15px]">send</span>
+                        Send Help
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Curriculum Resource Builder */}
           <section className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
               <div>
@@ -647,11 +570,8 @@ export default function TeacherDashboard({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              
-              {/* Active Module lists */}
               <div className="md:col-span-2 space-y-3">
                 <h4 className="font-extrabold text-xs text-slate-500 uppercase tracking-wider">Draft Lessons Ready To Publish</h4>
-                
                 <div className="space-y-3">
                   {curriculumModules.map((mod) => (
                     <div 
@@ -676,10 +596,8 @@ export default function TeacherDashboard({
                 </div>
               </div>
 
-              {/* Create form card */}
               <div className="bg-slate-50 p-5 rounded-xl border border-slate-100 h-fit">
                 <h4 className="font-extrabold text-xs text-slate-700 uppercase tracking-wider mb-4">Create Custom Module</h4>
-                
                 <form onSubmit={handleCreateModule} className="space-y-3">
                   <div>
                     <label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Module Title</label>
@@ -692,7 +610,6 @@ export default function TeacherDashboard({
                       required
                     />
                   </div>
-
                   <div>
                     <label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Category</label>
                     <select 
@@ -706,7 +623,6 @@ export default function TeacherDashboard({
                       <option value="Life Skills">Life Skills</option>
                     </select>
                   </div>
-
                   <button 
                     type="submit"
                     className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs p-3 rounded-lg transition-transform active:scale-95 shadow-sm"
@@ -715,13 +631,12 @@ export default function TeacherDashboard({
                   </button>
                 </form>
               </div>
-
             </div>
           </section>
         </>
       )}
 
-      {/* Attendance Checker Tab */}
+      {/* ── Attendance Checker Tab ── */}
       {activeTab === 'attendance' && (
         <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-6 animate-in fade-in duration-200">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
@@ -729,8 +644,6 @@ export default function TeacherDashboard({
               <h3 className="text-lg font-black text-slate-800">Attendance Checker</h3>
               <p className="text-xs text-slate-450 mt-0.5">Record and view attendance parameters by date, subject and student sections.</p>
             </div>
-            
-            {/* CSV Export Buttons */}
             <div className="flex gap-2">
               <button
                 onClick={() => handleExportCSV('day')}
@@ -741,7 +654,7 @@ export default function TeacherDashboard({
               </button>
               <button
                 onClick={() => handleExportCSV('all')}
-                className="px-3.5 py-2 border border-slate-200 hover:border-slate-350 hover:bg-indigo-50/20 text-indigo-700 bg-indigo-50/50 font-extrabold text-xs rounded-xl flex items-center gap-1.5 cursor-pointer transition-all active:scale-97"
+                className="px-3.5 py-2 border border-slate-200 hover:bg-indigo-50/20 text-indigo-700 bg-indigo-50/50 font-extrabold text-xs rounded-xl flex items-center gap-1.5 cursor-pointer transition-all active:scale-97"
               >
                 <span className="material-symbols-outlined text-sm">download_for_offline</span>
                 Export History CSV
@@ -749,8 +662,8 @@ export default function TeacherDashboard({
             </div>
           </div>
 
-          {/* Filtering Console Card */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50 p-4.5 rounded-xl border border-slate-150 shadow-2xs">
+          {/* Filters */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-150 shadow-2xs">
             <div>
               <label className="text-[10px] font-black text-slate-550 uppercase block mb-1">Select Subject</label>
               <select
@@ -764,7 +677,6 @@ export default function TeacherDashboard({
                 <option value="Life Skills">Life Skills</option>
               </select>
             </div>
-
             <div>
               <label className="text-[10px] font-black text-slate-550 uppercase block mb-1">Select Section</label>
               <select
@@ -776,7 +688,6 @@ export default function TeacherDashboard({
                 <option value="Section B">Section B</option>
               </select>
             </div>
-
             <div>
               <label className="text-[10px] font-black text-slate-550 uppercase block mb-1">Date</label>
               <input
@@ -788,7 +699,7 @@ export default function TeacherDashboard({
             </div>
           </div>
 
-          {/* Students List for Attendance */}
+          {/* Students List */}
           <div className="space-y-4">
             <div className="flex justify-between items-center px-1">
               <span className="text-xs font-black text-slate-455 uppercase tracking-wider">
@@ -811,52 +722,37 @@ export default function TeacherDashboard({
                     const status = localRecords[student.email] || 'present';
                     return (
                       <div key={student.email} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50/50 transition-colors">
-                        {/* Student profile */}
                         <div className="flex items-center gap-3.5">
                           <div className="w-10 h-10 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 font-bold flex items-center justify-center text-sm uppercase shrink-0 shadow-2xs">
-                            {student.name.split(' ').map(n => n[0]).join('')}
+                            {student.name.split(' ').map((n: string) => n[0]).join('')}
                           </div>
                           <div>
                             <h4 className="font-extrabold text-xs text-slate-800 leading-none">{student.name}</h4>
                             <p className="text-[10.5px] text-slate-450 mt-1 font-mono">{student.email}</p>
                           </div>
                         </div>
-
-                        {/* Status Toggle Buttons */}
                         <div className="flex items-center gap-1.5 self-start sm:self-center">
                           <button
                             type="button"
                             onClick={() => setLocalRecords(prev => ({ ...prev, [student.email]: 'present' }))}
                             className={`px-3.5 py-1.5 rounded-xl text-[10.5px] font-black uppercase tracking-wider transition-all border cursor-pointer ${
-                              status === 'present'
-                                ? 'bg-emerald-600 border-emerald-600 text-white shadow-xs'
-                                : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-650'
+                              status === 'present' ? 'bg-emerald-600 border-emerald-600 text-white shadow-xs' : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-650'
                             }`}
-                          >
-                            Present
-                          </button>
+                          >Present</button>
                           <button
                             type="button"
                             onClick={() => setLocalRecords(prev => ({ ...prev, [student.email]: 'late' }))}
                             className={`px-3.5 py-1.5 rounded-xl text-[10.5px] font-black uppercase tracking-wider transition-all border cursor-pointer ${
-                              status === 'late'
-                                ? 'bg-amber-500 border-amber-500 text-white shadow-xs'
-                                : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-655'
+                              status === 'late' ? 'bg-amber-500 border-amber-500 text-white shadow-xs' : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-655'
                             }`}
-                          >
-                            Late
-                          </button>
+                          >Late</button>
                           <button
                             type="button"
                             onClick={() => setLocalRecords(prev => ({ ...prev, [student.email]: 'absent' }))}
                             className={`px-3.5 py-1.5 rounded-xl text-[10.5px] font-black uppercase tracking-wider transition-all border cursor-pointer ${
-                              status === 'absent'
-                                ? 'bg-rose-600 border-rose-600 text-white shadow-xs'
-                                : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-650'
+                              status === 'absent' ? 'bg-rose-600 border-rose-600 text-white shadow-xs' : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-650'
                             }`}
-                          >
-                            Absent
-                          </button>
+                          >Absent</button>
                         </div>
                       </div>
                     );
@@ -866,7 +762,6 @@ export default function TeacherDashboard({
             )}
           </div>
 
-          {/* Sync Button */}
           {accounts.filter(s => s.role === 'student' && s.section === filterSection && s.subjects?.includes(filterSubject)).length > 0 && (
             <div className="pt-3 border-t border-slate-100 flex justify-end">
               <button
@@ -882,24 +777,20 @@ export default function TeacherDashboard({
         </div>
       )}
 
-      {/* Student Analytics Tab */}
+      {/* ── Student Analytics Tab ── */}
       {activeTab === 'analytics' && (() => {
         const enrolled = accounts.filter(
           s => s.role === 'student' && s.section === filterSection && s.subjects?.includes(filterSubject)
         );
-
         const subAttendance = attendance.filter(
           a => a.subject === filterSubject && a.section === filterSection
         );
-
         const subGrades = grades.filter(
           g => g.subject === filterSubject && g.section === filterSection
         );
 
-        // Calculate Average Attendance Rate
         let totalLogsExpected = 0;
         let totalAttended = 0;
-        
         const absencesRecord: Record<string, number> = {};
         enrolled.forEach(s => {
           absencesRecord[s.email] = 0;
@@ -907,28 +798,16 @@ export default function TeacherDashboard({
             const status = log.records[s.email];
             if (status) {
               totalLogsExpected++;
-              if (status === 'present' || status === 'late') {
-                totalAttended++;
-              }
-              if (status === 'absent') {
-                absencesRecord[s.email]++;
-              }
+              if (status === 'present' || status === 'late') totalAttended++;
+              if (status === 'absent') absencesRecord[s.email]++;
             }
           });
         });
 
         const attendanceRate = totalLogsExpected > 0 ? (totalAttended / totalLogsExpected) * 100 : 100;
-
-        // Calculate Grade Metrics
         const gradeAverage = subGrades.length > 0 ? subGrades.reduce((sum, g) => sum + g.score, 0) / subGrades.length : 0;
 
-        const distribution = {
-          excellent: 0,
-          good: 0,
-          satisfactory: 0,
-          struggling: 0
-        };
-
+        const distribution = { excellent: 0, good: 0, satisfactory: 0, struggling: 0 };
         subGrades.forEach(g => {
           if (g.score >= 90) distribution.excellent++;
           else if (g.score >= 80) distribution.good++;
@@ -936,22 +815,14 @@ export default function TeacherDashboard({
           else distribution.struggling++;
         });
 
-        // Identify At Risk Students
         const atRiskStudents = enrolled.map(student => {
           const absenceCount = absencesRecord[student.email] || 0;
           const gradeRec = subGrades.find(g => g.studentEmail === student.email);
           const score = gradeRec ? gradeRec.score : null;
-          return {
-            ...student,
-            absences: absenceCount,
-            score
-          };
+          return { ...student, absences: absenceCount, score };
         }).filter(s => s.absences > 3 || (s.score !== null && s.score < 70));
 
-        // Attendance Stats Breakdown
-        let presentCount = 0;
-        let lateCount = 0;
-        let absentCount = 0;
+        let presentCount = 0, lateCount = 0, absentCount = 0;
         subAttendance.forEach(log => {
           enrolled.forEach(s => {
             const status = log.records[s.email];
@@ -967,36 +838,24 @@ export default function TeacherDashboard({
 
         return (
           <div className="space-y-6 animate-in fade-in duration-200">
-            {/* Filters Header */}
             <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
               <div>
                 <h3 className="text-lg font-black text-slate-800">Student Analytics Dashboard</h3>
                 <p className="text-xs text-slate-450 mt-0.5">Explore comparative visualizations, academic distributions and risk markers.</p>
               </div>
-
-              {/* Filtering Consoles */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 p-4.5 rounded-xl border border-slate-150">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-150">
                 <div>
                   <label className="text-[10px] font-black text-slate-550 uppercase block mb-1">Filter Subject</label>
-                  <select
-                    value={filterSubject}
-                    onChange={(e) => setFilterSubject(e.target.value)}
-                    className="w-full bg-white border border-slate-200 focus:border-[#526069] rounded-xl p-2.5 text-xs outline-none font-bold shadow-sm"
-                  >
+                  <select value={filterSubject} onChange={(e) => setFilterSubject(e.target.value)} className="w-full bg-white border border-slate-200 focus:border-[#526069] rounded-xl p-2.5 text-xs outline-none font-bold shadow-sm">
                     <option value="Mathematics">Mathematics</option>
                     <option value="Science">Science</option>
                     <option value="English">English</option>
                     <option value="Life Skills">Life Skills</option>
                   </select>
                 </div>
-
                 <div>
                   <label className="text-[10px] font-black text-slate-550 uppercase block mb-1">Filter Section</label>
-                  <select
-                    value={filterSection}
-                    onChange={(e) => setFilterSection(e.target.value)}
-                    className="w-full bg-white border border-slate-200 focus:border-[#526069] rounded-xl p-2.5 text-xs outline-none font-bold shadow-sm"
-                  >
+                  <select value={filterSection} onChange={(e) => setFilterSection(e.target.value)} className="w-full bg-white border border-slate-200 focus:border-[#526069] rounded-xl p-2.5 text-xs outline-none font-bold shadow-sm">
                     <option value="Section A">Section A</option>
                     <option value="Section B">Section B</option>
                   </select>
@@ -1004,7 +863,7 @@ export default function TeacherDashboard({
               </div>
             </div>
 
-            {/* Key Metrics Cards */}
+            {/* Key Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4">
                 <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0">
@@ -1012,30 +871,20 @@ export default function TeacherDashboard({
                 </div>
                 <div>
                   <span className="text-[10.5px] font-bold text-slate-405 block uppercase leading-none">Average Attendance</span>
-                  <span className="text-2xl font-black text-slate-800 mt-1.5 block leading-none">
-                    {attendanceRate.toFixed(1)}%
-                  </span>
+                  <span className="text-2xl font-black text-slate-800 mt-1.5 block leading-none">{attendanceRate.toFixed(1)}%</span>
                 </div>
               </div>
-
               <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4">
                 <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
                   <span className="material-symbols-outlined text-2xl font-bold">school</span>
                 </div>
                 <div>
                   <span className="text-[10.5px] font-bold text-slate-405 block uppercase leading-none">Average Class Score</span>
-                  <span className="text-2xl font-black text-slate-800 mt-1.5 block leading-none">
-                    {gradeAverage > 0 ? `${gradeAverage.toFixed(1)}%` : 'N/A'}
-                  </span>
+                  <span className="text-2xl font-black text-slate-800 mt-1.5 block leading-none">{gradeAverage > 0 ? `${gradeAverage.toFixed(1)}%` : 'N/A'}</span>
                 </div>
               </div>
-
-              <div className={`p-5 rounded-2xl border shadow-sm flex items-center gap-4 transition-colors ${
-                atRiskStudents.length > 0 ? 'bg-rose-50 border-rose-100 animate-pulse' : 'bg-white border-slate-100'
-              }`}>
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
-                  atRiskStudents.length > 0 ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-500'
-                }`}>
+              <div className={`p-5 rounded-2xl border shadow-sm flex items-center gap-4 transition-colors ${atRiskStudents.length > 0 ? 'bg-rose-50 border-rose-100 animate-pulse' : 'bg-white border-slate-100'}`}>
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${atRiskStudents.length > 0 ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-500'}`}>
                   <span className="material-symbols-outlined text-2xl font-bold">warning</span>
                 </div>
                 <div>
@@ -1047,84 +896,44 @@ export default function TeacherDashboard({
               </div>
             </div>
 
-            {/* Graphics Charts Grid */}
+            {/* Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              
-              {/* Grade Distribution Bar Graph */}
               <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-5">
                 <div>
                   <h4 className="font-extrabold text-sm text-slate-800">Grade Distribution</h4>
                   <p className="text-[10.5px] text-slate-400 mt-0.5">Academic performance groupings for enrolled students.</p>
                 </div>
-
                 {subGrades.length === 0 ? (
                   <div className="h-48 flex items-center justify-center bg-slate-50 border border-dashed border-slate-200 rounded-xl">
                     <span className="text-xs font-semibold text-slate-405">No academic scores recorded.</span>
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    <div>
-                      <div className="flex justify-between text-[11px] font-bold text-slate-600 mb-1">
-                        <span>Excellent (90 - 100%)</span>
-                        <span className="text-indigo-650 font-extrabold">{distribution.excellent} Students</span>
+                    {[
+                      { label: 'Excellent (90 - 100%)', count: distribution.excellent, color: 'from-indigo-500 to-purple-500', textColor: 'text-indigo-650' },
+                      { label: 'Good (80 - 89%)', count: distribution.good, color: 'from-blue-500 to-cyan-500', textColor: 'text-blue-650' },
+                      { label: 'Satisfactory (70 - 79%)', count: distribution.satisfactory, color: 'from-amber-500 to-orange-500', textColor: 'text-amber-650' },
+                      { label: 'Needs Improvement (< 70%)', count: distribution.struggling, color: 'from-rose-500 to-red-500', textColor: 'text-rose-700' },
+                    ].map(row => (
+                      <div key={row.label}>
+                        <div className="flex justify-between text-[11px] font-bold text-slate-600 mb-1">
+                          <span>{row.label}</span>
+                          <span className={`${row.textColor} font-extrabold`}>{row.count} Students</span>
+                        </div>
+                        <div className="w-full h-3.5 bg-slate-100 rounded-full overflow-hidden">
+                          <div className={`h-full bg-gradient-to-r ${row.color} rounded-full transition-all duration-1000`} style={{ width: `${subGrades.length > 0 ? (row.count / subGrades.length) * 100 : 0}%` }}></div>
+                        </div>
                       </div>
-                      <div className="w-full h-3.5 bg-slate-100 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-linear-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-1000"
-                          style={{ width: `${subGrades.length > 0 ? (distribution.excellent / subGrades.length) * 100 : 0}%` }}
-                        ></div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className="flex justify-between text-[11px] font-bold text-slate-600 mb-1">
-                        <span>Good (80 - 89%)</span>
-                        <span className="text-blue-650 font-extrabold">{distribution.good} Students</span>
-                      </div>
-                      <div className="w-full h-3.5 bg-slate-100 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-linear-to-r from-blue-500 to-cyan-500 rounded-full transition-all duration-1000"
-                          style={{ width: `${subGrades.length > 0 ? (distribution.good / subGrades.length) * 100 : 0}%` }}
-                        ></div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className="flex justify-between text-[11px] font-bold text-slate-600 mb-1">
-                        <span>Satisfactory (70 - 79%)</span>
-                        <span className="text-amber-650 font-extrabold">{distribution.satisfactory} Students</span>
-                      </div>
-                      <div className="w-full h-3.5 bg-slate-100 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-linear-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-1000"
-                          style={{ width: `${subGrades.length > 0 ? (distribution.satisfactory / subGrades.length) * 100 : 0}%` }}
-                        ></div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className="flex justify-between text-[11px] font-bold text-rose-700 mb-1">
-                        <span>Needs Improvement (&lt; 70%)</span>
-                        <span className="text-rose-700 font-extrabold">{distribution.struggling} Students</span>
-                      </div>
-                      <div className="w-full h-3.5 bg-slate-100 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-linear-to-r from-rose-500 to-red-500 rounded-full transition-all duration-1000"
-                          style={{ width: `${subGrades.length > 0 ? (distribution.struggling / subGrades.length) * 100 : 0}%` }}
-                        ></div>
-                      </div>
-                    </div>
+                    ))}
                   </div>
                 )}
               </div>
 
-              {/* Attendance Log Stats breakdown chart */}
               <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-5">
                 <div>
                   <h4 className="font-extrabold text-sm text-slate-800">Attendance Status Breakdown</h4>
                   <p className="text-[10.5px] text-slate-400 mt-0.5">Aggregated status allocations for recorded logs.</p>
                 </div>
-
                 {subAttendance.length === 0 ? (
                   <div className="h-48 flex items-center justify-center bg-slate-50 border border-dashed border-slate-200 rounded-xl">
                     <span className="text-xs font-semibold text-slate-405">No attendance history logs recorded.</span>
@@ -1132,11 +941,10 @@ export default function TeacherDashboard({
                 ) : (
                   <div className="space-y-5">
                     <div className="w-full h-7 rounded-xl overflow-hidden flex shadow-2xs border border-slate-200/50">
-                      <div className="h-full bg-emerald-500 transition-all duration-700" style={{ width: `${presentPercent}%` }} title={`Present: ${presentPercent.toFixed(1)}%`}></div>
-                      <div className="h-full bg-amber-400 transition-all duration-700" style={{ width: `${latePercent}%` }} title={`Late: ${latePercent.toFixed(1)}%`}></div>
-                      <div className="h-full bg-rose-500 transition-all duration-700" style={{ width: `${absentPercent}%` }} title={`Absent: ${absentPercent.toFixed(1)}%`}></div>
+                      <div className="h-full bg-emerald-500 transition-all duration-700" style={{ width: `${presentPercent}%` }}></div>
+                      <div className="h-full bg-amber-400 transition-all duration-700" style={{ width: `${latePercent}%` }}></div>
+                      <div className="h-full bg-rose-500 transition-all duration-700" style={{ width: `${absentPercent}%` }}></div>
                     </div>
-
                     <div className="grid grid-cols-3 gap-3 pt-1 text-center text-xs font-bold">
                       <div className="p-3.5 bg-emerald-50 text-emerald-800 rounded-2xl border border-emerald-100/50">
                         <span className="block text-base font-extrabold text-emerald-600 leading-none">{presentPercent.toFixed(1)}%</span>
@@ -1154,16 +962,14 @@ export default function TeacherDashboard({
                   </div>
                 )}
               </div>
-
             </div>
 
-            {/* At-Risk Registries list */}
+            {/* At-Risk Registry */}
             <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
               <div>
                 <h4 className="font-extrabold text-sm text-slate-800">At-Risk Student Registry</h4>
                 <p className="text-[10.5px] text-slate-400 mt-0.5">Students flagged due to high absences (&gt;3) or grades below 70%.</p>
               </div>
-
               {atRiskStudents.length === 0 ? (
                 <div className="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-150">
                   <span className="material-symbols-outlined text-emerald-650 text-3xl font-bold">verified_user</span>
@@ -1178,7 +984,7 @@ export default function TeacherDashboard({
                       <div key={student.email} className="p-4 bg-slate-50 border border-slate-150 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors hover:border-slate-350">
                         <div className="flex items-center gap-3.5">
                           <div className="w-10 h-10 rounded-full bg-rose-50 border border-rose-250 text-rose-700 font-bold flex items-center justify-center text-sm uppercase shrink-0 shadow-2xs">
-                            {student.name.split(' ').map(n => n[0]).join('')}
+                            {student.name.split(' ').map((n: string) => n[0]).join('')}
                           </div>
                           <div>
                             <h5 className="font-extrabold text-xs text-slate-800 leading-none">{student.name}</h5>
@@ -1197,7 +1003,6 @@ export default function TeacherDashboard({
                             </div>
                           </div>
                         </div>
-
                         <button
                           type="button"
                           onClick={() => handleSendHelp(student.name, filterSubject)}
@@ -1212,12 +1017,11 @@ export default function TeacherDashboard({
                 </div>
               )}
             </div>
-
           </div>
         );
       })()}
 
-      {/* ─── Lesson Builder Tab ──────────────────────────────────────────────── */}
+      {/* ── Lesson Builder Tab ── */}
       {activeTab === 'content' && (
         <section className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-6 animate-in fade-in duration-200">
           <div className="border-b border-slate-100 pb-4">
@@ -1273,7 +1077,6 @@ export default function TeacherDashboard({
                       required
                     />
                   </div>
-
                   <div>
                     <label className="text-[11px] font-black text-slate-500 uppercase block mb-1">
                       Subject Area
@@ -1311,7 +1114,6 @@ export default function TeacherDashboard({
                       <option value="3">Level 3 (Secondary Advanced)</option>
                     </select>
                   </div>
-
                   <div>
                     <label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Expected Study Duration</label>
                     <input
@@ -1325,7 +1127,6 @@ export default function TeacherDashboard({
                   </div>
                 </div>
 
-                {/* Link mode */}
                 {creationMethod === 'link' ? (
                   <>
                     <div>
@@ -1341,11 +1142,8 @@ export default function TeacherDashboard({
                           required={creationMethod === 'link'}
                         />
                       </div>
-                      <span className="text-[10px] text-slate-400 mt-1 block">
-                        Copy-paste any bucket object reference link directly from your Supabase panel.
-                      </span>
+                      <span className="text-[10px] text-slate-400 mt-1 block">Copy-paste any bucket object reference link directly from your Supabase panel.</span>
                     </div>
-
                     <div>
                       <label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Summary Description</label>
                       <textarea
@@ -1358,7 +1156,6 @@ export default function TeacherDashboard({
                     </div>
                   </>
                 ) : (
-                  /* Interactive Builder mode */
                   <div className="bg-white border border-slate-200 rounded-2xl p-4 space-y-4 shadow-xs animate-in slide-in-from-top-1 duration-150">
                     <div className="bg-indigo-50 border border-indigo-100 p-3 rounded-xl flex items-center gap-2">
                       <span className="material-symbols-outlined text-indigo-700 text-[18px]">auto_stories</span>
@@ -1366,263 +1163,107 @@ export default function TeacherDashboard({
                     </div>
 
                     <div className="space-y-6">
-                      {/* Dynamic Slides Section */}
+                      {/* Slides Section */}
                       <div className="bg-white border border-slate-200 rounded-2xl p-4 space-y-4 shadow-xs">
                         <div className="bg-indigo-50 border border-indigo-100 p-3 rounded-xl flex items-center justify-between gap-4">
                           <div className="flex items-center gap-2">
                             <span className="material-symbols-outlined text-indigo-700 text-[18px]">auto_stories</span>
                             <span className="text-[10px] font-black text-indigo-800 uppercase tracking-wider">Dynamic Textbook Slides ({builderSlides.length})</span>
                           </div>
-                          <button
-                            type="button"
-                            onClick={handleAddSlide}
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[9px] uppercase px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 cursor-pointer shadow-xs transition-transform active:scale-95 whitespace-nowrap"
-                          >
-                            <span className="material-symbols-outlined text-xs">add</span>
-                            Add Slide
+                          <button type="button" onClick={handleAddSlide} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[9px] uppercase px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 cursor-pointer shadow-xs transition-transform active:scale-95 whitespace-nowrap">
+                            <span className="material-symbols-outlined text-xs">add</span>Add Slide
                           </button>
                         </div>
-
                         <div className="space-y-4 max-h-[450px] overflow-y-auto pr-1">
                           {builderSlides.map((slide, idx) => (
-                            <div
-                              key={slide.id}
-                              className="bg-slate-50 border border-slate-150 rounded-xl p-4 space-y-3 relative group transition-colors hover:border-slate-300"
-                            >
+                            <div key={slide.id} className="bg-slate-50 border border-slate-150 rounded-xl p-4 space-y-3 relative group transition-colors hover:border-slate-300">
                               <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                                <span className="text-[10.5px] font-black text-indigo-900 uppercase tracking-wider bg-indigo-100/75 px-2 py-0.5 rounded">
-                                  📖 Slide #{idx + 1}
-                                </span>
+                                <span className="text-[10.5px] font-black text-indigo-900 uppercase tracking-wider bg-indigo-100/75 px-2 py-0.5 rounded">📖 Slide #{idx + 1}</span>
                                 <div className="flex items-center gap-1.5">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleMoveSlide(idx, 'up')}
-                                    disabled={idx === 0}
-                                    className="p-1 rounded bg-white text-slate-500 hover:bg-slate-250 disabled:opacity-30 disabled:pointer-events-none border border-slate-200 cursor-pointer"
-                                    title="Move Slide Up"
-                                  >
+                                  <button type="button" onClick={() => handleMoveSlide(idx, 'up')} disabled={idx === 0} className="p-1 rounded bg-white text-slate-500 hover:bg-slate-250 disabled:opacity-30 disabled:pointer-events-none border border-slate-200 cursor-pointer" title="Move Slide Up">
                                     <span className="material-symbols-outlined text-sm block">expand_less</span>
                                   </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleMoveSlide(idx, 'down')}
-                                    disabled={idx === builderSlides.length - 1}
-                                    className="p-1 rounded bg-white text-slate-500 hover:bg-slate-250 disabled:opacity-30 disabled:pointer-events-none border border-slate-200 cursor-pointer"
-                                    title="Move Slide Down"
-                                  >
+                                  <button type="button" onClick={() => handleMoveSlide(idx, 'down')} disabled={idx === builderSlides.length - 1} className="p-1 rounded bg-white text-slate-500 hover:bg-slate-250 disabled:opacity-30 disabled:pointer-events-none border border-slate-200 cursor-pointer" title="Move Slide Down">
                                     <span className="material-symbols-outlined text-sm block">expand_more</span>
                                   </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleRemoveSlide(slide.id)}
-                                    disabled={builderSlides.length <= 1}
-                                    className="p-1 rounded bg-white text-rose-600 hover:bg-rose-50 hover:border-rose-200 disabled:opacity-30 disabled:pointer-events-none border border-slate-200 cursor-pointer ml-1"
-                                    title="Delete Slide"
-                                  >
+                                  <button type="button" onClick={() => handleRemoveSlide(slide.id)} disabled={builderSlides.length <= 1} className="p-1 rounded bg-white text-rose-600 hover:bg-rose-50 hover:border-rose-200 disabled:opacity-30 disabled:pointer-events-none border border-slate-200 cursor-pointer ml-1" title="Delete Slide">
                                     <span className="material-symbols-outlined text-sm block">delete</span>
                                   </button>
                                 </div>
                               </div>
-
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                                 <div>
                                   <label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Slide Title / Reading Heading</label>
-                                  <input
-                                    type="text"
-                                    value={slide.title}
-                                    onChange={(e) => {
-                                      const updated = [...builderSlides];
-                                      updated[idx].title = e.target.value;
-                                      setBuilderSlides(updated);
-                                    }}
-                                    placeholder="e.g. Chapter Foundations"
-                                    className="w-full bg-white border border-slate-200 focus:border-slate-505 rounded-xl p-2.5 text-xs outline-none font-semibold shadow-xs"
-                                    required
-                                  />
+                                  <input type="text" value={slide.title} onChange={(e) => { const updated = [...builderSlides]; updated[idx].title = e.target.value; setBuilderSlides(updated); }} placeholder="e.g. Chapter Foundations" className="w-full bg-white border border-slate-200 focus:border-slate-505 rounded-xl p-2.5 text-xs outline-none font-semibold shadow-xs" required />
                                 </div>
                                 <div>
                                   <label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Illustration / Unsplash Image URL</label>
-                                  <input
-                                    type="url"
-                                    value={slide.imageUrl}
-                                    onChange={(e) => {
-                                      const updated = [...builderSlides];
-                                      updated[idx].imageUrl = e.target.value;
-                                      setBuilderSlides(updated);
-                                    }}
-                                    placeholder="https://images.unsplash.com/... (optional)"
-                                    className="w-full bg-white border border-slate-200 focus:border-slate-505 rounded-xl p-2.5 text-xs outline-none font-mono text-slate-700 shadow-xs"
-                                  />
+                                  <input type="url" value={slide.imageUrl} onChange={(e) => { const updated = [...builderSlides]; updated[idx].imageUrl = e.target.value; setBuilderSlides(updated); }} placeholder="https://images.unsplash.com/... (optional)" className="w-full bg-white border border-slate-200 focus:border-slate-505 rounded-xl p-2.5 text-xs outline-none font-mono text-slate-700 shadow-xs" />
                                 </div>
                               </div>
-
                               <div>
                                 <label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Body Text Content / Chapter Lessons</label>
-                                <textarea
-                                  value={slide.content}
-                                  onChange={(e) => {
-                                    const updated = [...builderSlides];
-                                    updated[idx].content = e.target.value;
-                                    setBuilderSlides(updated);
-                                  }}
-                                  placeholder="Write or paste paragraph structures for the student to study..."
-                                  rows={3}
-                                  className="w-full bg-white border border-slate-200 focus:border-slate-505 rounded-xl p-2.5 text-xs outline-none font-semibold leading-relaxed shadow-xs"
-                                  required
-                                />
+                                <textarea value={slide.content} onChange={(e) => { const updated = [...builderSlides]; updated[idx].content = e.target.value; setBuilderSlides(updated); }} placeholder="Write or paste paragraph structures for the student to study..." rows={3} className="w-full bg-white border border-slate-200 focus:border-slate-505 rounded-xl p-2.5 text-xs outline-none font-semibold leading-relaxed shadow-xs" required />
                               </div>
                             </div>
                           ))}
                         </div>
                       </div>
 
-                      {/* Dynamic Quizzes Section */}
+                      {/* Quizzes Section */}
                       <div className="bg-white border border-slate-200 rounded-2xl p-4 space-y-4 shadow-xs">
                         <div className="bg-emerald-50 border border-emerald-100 p-3 rounded-xl flex items-center justify-between gap-4">
                           <div className="flex items-center gap-2">
                             <span className="material-symbols-outlined text-emerald-800 text-[18px]">verified</span>
                             <span className="text-[10px] font-black text-emerald-800 uppercase tracking-wider">Dynamic Interactive Quizzes ({builderQuizzes.length})</span>
                           </div>
-                          <button
-                            type="button"
-                            onClick={handleAddQuiz}
-                            className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-[9px] uppercase px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 cursor-pointer shadow-xs transition-transform active:scale-95 whitespace-nowrap"
-                          >
-                            <span className="material-symbols-outlined text-xs">add</span>
-                            Add Question
+                          <button type="button" onClick={handleAddQuiz} className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-[9px] uppercase px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 cursor-pointer shadow-xs transition-transform active:scale-95 whitespace-nowrap">
+                            <span className="material-symbols-outlined text-xs">add</span>Add Question
                           </button>
                         </div>
-
                         <div className="space-y-4 max-h-[450px] overflow-y-auto pr-1">
                           {builderQuizzes.map((q, idx) => (
-                            <div
-                              key={q.id}
-                              className="bg-slate-50 border border-slate-150 rounded-xl p-4 space-y-3 relative group transition-colors hover:border-slate-300"
-                            >
+                            <div key={q.id} className="bg-slate-50 border border-slate-150 rounded-xl p-4 space-y-3 relative group transition-colors hover:border-slate-300">
                               <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                                <span className="text-[10.5px] font-black text-emerald-800 uppercase tracking-wider bg-emerald-100/70 px-2 py-0.5 rounded">
-                                  ✓ Check #{idx + 1}
-                                </span>
+                                <span className="text-[10.5px] font-black text-emerald-800 uppercase tracking-wider bg-emerald-100/70 px-2 py-0.5 rounded">✓ Check #{idx + 1}</span>
                                 <div className="flex items-center gap-1.5">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleMoveQuiz(idx, 'up')}
-                                    disabled={idx === 0}
-                                    className="p-1 rounded bg-white text-slate-500 hover:bg-slate-250 disabled:opacity-30 disabled:pointer-events-none border border-slate-200 cursor-pointer"
-                                    title="Move Question Up"
-                                  >
+                                  <button type="button" onClick={() => handleMoveQuiz(idx, 'up')} disabled={idx === 0} className="p-1 rounded bg-white text-slate-500 hover:bg-slate-250 disabled:opacity-30 disabled:pointer-events-none border border-slate-200 cursor-pointer">
                                     <span className="material-symbols-outlined text-sm block">expand_less</span>
                                   </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleMoveQuiz(idx, 'down')}
-                                    disabled={idx === builderQuizzes.length - 1}
-                                    className="p-1 rounded bg-white text-slate-500 hover:bg-slate-250 disabled:opacity-30 disabled:pointer-events-none border border-slate-200 cursor-pointer"
-                                    title="Move Question Down"
-                                  >
+                                  <button type="button" onClick={() => handleMoveQuiz(idx, 'down')} disabled={idx === builderQuizzes.length - 1} className="p-1 rounded bg-white text-slate-500 hover:bg-slate-250 disabled:opacity-30 disabled:pointer-events-none border border-slate-200 cursor-pointer">
                                     <span className="material-symbols-outlined text-sm block">expand_more</span>
                                   </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleRemoveQuiz(q.id)}
-                                    disabled={builderQuizzes.length <= 1}
-                                    className="p-1 rounded bg-white text-rose-600 hover:bg-rose-50 hover:border-rose-200 disabled:opacity-30 disabled:pointer-events-none border border-slate-200 cursor-pointer ml-1"
-                                    title="Delete Question"
-                                  >
+                                  <button type="button" onClick={() => handleRemoveQuiz(q.id)} disabled={builderQuizzes.length <= 1} className="p-1 rounded bg-white text-rose-600 hover:bg-rose-50 hover:border-rose-200 disabled:opacity-30 disabled:pointer-events-none border border-slate-200 cursor-pointer ml-1">
                                     <span className="material-symbols-outlined text-sm block">delete</span>
                                   </button>
                                 </div>
                               </div>
-
                               <div>
                                 <label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Assessment Question Text</label>
-                                <input
-                                  type="text"
-                                  value={q.question}
-                                  onChange={(e) => {
-                                    const updated = [...builderQuizzes];
-                                    updated[idx].question = e.target.value;
-                                    setBuilderQuizzes(updated);
-                                  }}
-                                  placeholder="e.g. Which of these options can expand root growth in agricultural fields?"
-                                  className="w-full bg-white border border-slate-200 focus:border-slate-505 rounded-xl p-2.5 text-xs outline-none font-semibold shadow-xs"
-                                  required
-                                />
+                                <input type="text" value={q.question} onChange={(e) => { const updated = [...builderQuizzes]; updated[idx].question = e.target.value; setBuilderQuizzes(updated); }} placeholder="e.g. Which of these options can expand root growth in agricultural fields?" className="w-full bg-white border border-slate-200 focus:border-slate-505 rounded-xl p-2.5 text-xs outline-none font-semibold shadow-xs" required />
                               </div>
-
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-1 border-b border-dashed border-slate-200">
                                 <div>
                                   <label className="text-[10px] font-extrabold uppercase text-[#526a79] block mb-0.5">Option A (Min Required)</label>
-                                  <input
-                                    type="text"
-                                    value={q.options.A}
-                                    onChange={(e) => {
-                                      const updated = [...builderQuizzes];
-                                      updated[idx].options.A = e.target.value;
-                                      setBuilderQuizzes(updated);
-                                    }}
-                                    placeholder="A) Loam compost soil"
-                                    className="w-full bg-white border border-slate-205 rounded-xl p-2.5 text-xs outline-none font-semibold"
-                                    required
-                                  />
+                                  <input type="text" value={q.options.A} onChange={(e) => { const updated = [...builderQuizzes]; updated[idx].options.A = e.target.value; setBuilderQuizzes(updated); }} placeholder="A) Loam compost soil" className="w-full bg-white border border-slate-205 rounded-xl p-2.5 text-xs outline-none font-semibold" required />
                                 </div>
                                 <div>
                                   <label className="text-[10px] font-extrabold uppercase text-[#526a79] block mb-0.5">Option B (Min Required)</label>
-                                  <input
-                                    type="text"
-                                    value={q.options.B}
-                                    onChange={(e) => {
-                                      const updated = [...builderQuizzes];
-                                      updated[idx].options.B = e.target.value;
-                                      setBuilderQuizzes(updated);
-                                    }}
-                                    placeholder="B) Silt clay blends"
-                                    className="w-full bg-white border border-slate-205 rounded-xl p-2.5 text-xs outline-none font-semibold"
-                                    required
-                                  />
+                                  <input type="text" value={q.options.B} onChange={(e) => { const updated = [...builderQuizzes]; updated[idx].options.B = e.target.value; setBuilderQuizzes(updated); }} placeholder="B) Silt clay blends" className="w-full bg-white border border-slate-205 rounded-xl p-2.5 text-xs outline-none font-semibold" required />
                                 </div>
                                 <div>
                                   <label className="text-[10px] font-extrabold uppercase text-slate-450 block mb-0.5">Option C (Optional)</label>
-                                  <input
-                                    type="text"
-                                    value={q.options.C}
-                                    onChange={(e) => {
-                                      const updated = [...builderQuizzes];
-                                      updated[idx].options.C = e.target.value;
-                                      setBuilderQuizzes(updated);
-                                    }}
-                                    placeholder="C) Sandy desert structures"
-                                    className="w-full bg-white border border-slate-205 rounded-xl p-2.5 text-xs outline-none font-semibold"
-                                  />
+                                  <input type="text" value={q.options.C} onChange={(e) => { const updated = [...builderQuizzes]; updated[idx].options.C = e.target.value; setBuilderQuizzes(updated); }} placeholder="C) Sandy desert structures" className="w-full bg-white border border-slate-205 rounded-xl p-2.5 text-xs outline-none font-semibold" />
                                 </div>
                                 <div>
                                   <label className="text-[10px] font-extrabold uppercase text-slate-450 block mb-0.5">Option D (Optional)</label>
-                                  <input
-                                    type="text"
-                                    value={q.options.D}
-                                    onChange={(e) => {
-                                      const updated = [...builderQuizzes];
-                                      updated[idx].options.D = e.target.value;
-                                      setBuilderQuizzes(updated);
-                                    }}
-                                    placeholder="D) Dry gravel rocks"
-                                    className="w-full bg-white border border-slate-205 rounded-xl p-2.5 text-xs outline-none font-semibold"
-                                  />
+                                  <input type="text" value={q.options.D} onChange={(e) => { const updated = [...builderQuizzes]; updated[idx].options.D = e.target.value; setBuilderQuizzes(updated); }} placeholder="D) Dry gravel rocks" className="w-full bg-white border border-slate-205 rounded-xl p-2.5 text-xs outline-none font-semibold" />
                                 </div>
                               </div>
-
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
                                 <div>
                                   <label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Designate Correct Answer Choice</label>
-                                  <select
-                                    value={q.correctAnswer}
-                                    onChange={(e) => {
-                                      const updated = [...builderQuizzes];
-                                      updated[idx].correctAnswer = e.target.value as 'A' | 'B' | 'C' | 'D';
-                                      setBuilderQuizzes(updated);
-                                    }}
-                                    className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs outline-none font-bold"
-                                  >
+                                  <select value={q.correctAnswer} onChange={(e) => { const updated = [...builderQuizzes]; updated[idx].correctAnswer = e.target.value as 'A' | 'B' | 'C' | 'D'; setBuilderQuizzes(updated); }} className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs outline-none font-bold">
                                     <option value="A">Option A is Correct</option>
                                     <option value="B">Option B is Correct</option>
                                     <option value="C" disabled={!q.options.C.trim()}>Option C is Correct {!q.options.C.trim() && "(Define Option C first)"}</option>
@@ -1631,17 +1272,7 @@ export default function TeacherDashboard({
                                 </div>
                                 <div>
                                   <label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Feedback / Correct Explanation</label>
-                                  <input
-                                    type="text"
-                                    value={q.explanation}
-                                    onChange={(e) => {
-                                      const updated = [...builderQuizzes];
-                                      updated[idx].explanation = e.target.value;
-                                      setBuilderQuizzes(updated);
-                                    }}
-                                    placeholder="e.g. Yes! Loam offers wonderful oxygen retention."
-                                    className="w-full bg-white border border-slate-200 focus:border-slate-505 rounded-xl p-2.5 text-xs outline-none font-semibold shadow-xs"
-                                  />
+                                  <input type="text" value={q.explanation} onChange={(e) => { const updated = [...builderQuizzes]; updated[idx].explanation = e.target.value; setBuilderQuizzes(updated); }} placeholder="e.g. Yes! Loam offers wonderful oxygen retention." className="w-full bg-white border border-slate-200 focus:border-slate-505 rounded-xl p-2.5 text-xs outline-none font-semibold shadow-xs" />
                                 </div>
                               </div>
                             </div>
@@ -1662,10 +1293,9 @@ export default function TeacherDashboard({
               </form>
             </div>
 
-            {/* My Published Lessons List */}
+            {/* My Published Lessons */}
             <div className="lg:col-span-2 space-y-4">
               <h4 className="font-extrabold text-xs text-slate-500 uppercase tracking-wider block">My Published Lessons</h4>
-
               {myLessons.length === 0 ? (
                 <div className="p-8 border-2 border-dashed border-slate-150 rounded-2xl text-center text-slate-400">
                   <span className="material-symbols-outlined text-3xl mb-1.5 block">edit_note</span>
@@ -1678,33 +1308,18 @@ export default function TeacherDashboard({
                     <div key={l.id} className="p-4 bg-slate-50 hover:bg-slate-100/80 border border-slate-150 rounded-xl space-y-3 transition-colors">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <span className="inline-flex px-2 py-0.5 rounded-md text-[9px] font-black uppercase mb-1.5 bg-indigo-50 text-indigo-700">
-                            {l.category}
-                          </span>
-                          <h5 className="font-black text-xs text-slate-800 leading-tight block truncate" title={l.title}>
-                            {l.title}
-                          </h5>
+                          <span className="inline-flex px-2 py-0.5 rounded-md text-[9px] font-black uppercase mb-1.5 bg-indigo-50 text-indigo-700">{l.category}</span>
+                          <h5 className="font-black text-xs text-slate-800 leading-tight block truncate" title={l.title}>{l.title}</h5>
                         </div>
-
-                        <button
-                          onClick={() => onRemoveLesson(l.id)}
-                          className="text-slate-400 hover:text-rose-600 p-1 rounded hover:bg-slate-200 transition-colors cursor-pointer shrink-0"
-                          title="Delete Lesson"
-                        >
+                        <button onClick={() => onRemoveLesson(l.id)} className="text-slate-400 hover:text-rose-600 p-1 rounded hover:bg-slate-200 transition-colors cursor-pointer shrink-0" title="Delete Lesson">
                           <span className="material-symbols-outlined text-sm">delete</span>
                         </button>
                       </div>
-
-                      <p className="text-[10.5px] text-slate-500 line-clamp-2 leading-relaxed">
-                        {l.description}
-                      </p>
-
+                      <p className="text-[10.5px] text-slate-500 line-clamp-2 leading-relaxed">{l.description}</p>
                       {l.bucketUrl ? (
                         <div className="flex items-center gap-2 pt-1 border-t border-slate-200 text-[10px] font-mono select-all text-indigo-700 font-bold truncate">
                           <span className="material-symbols-outlined text-xs shrink-0">link</span>
-                          <a href={l.bucketUrl} target="_blank" rel="noreferrer" className="underline truncate shrink-1 hover:text-indigo-950">
-                            {l.bucketUrl}
-                          </a>
+                          <a href={l.bucketUrl} target="_blank" rel="noreferrer" className="underline truncate shrink-1 hover:text-indigo-950">{l.bucketUrl}</a>
                         </div>
                       ) : (
                         <div className="flex items-center gap-2 pt-1 border-t border-slate-150 text-[10px] font-sans text-indigo-700 font-extrabold">
@@ -1716,8 +1331,6 @@ export default function TeacherDashboard({
                   ))}
                 </div>
               )}
-
-              {/* Info hint */}
               <div className="p-4 bg-indigo-50 rounded-xl border border-indigo-100 text-indigo-800">
                 <h5 className="font-extrabold text-[11px] uppercase tracking-wider flex items-center gap-1.5 text-indigo-900 mb-1">
                   <span className="material-symbols-outlined text-xs">info</span>
