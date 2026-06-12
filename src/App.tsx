@@ -54,15 +54,6 @@ export default function App() {
         snapshot.forEach((doc) => {
           loadedAccounts.push(doc.data() as UserAccount);
         });
-        
-        // Ensure new default student accounts exist in Firestore
-        DEFAULT_ACCOUNTS.forEach(async (acc) => {
-          const exists = loadedAccounts.some(la => la.email.toLowerCase() === acc.email.toLowerCase());
-          if (!exists) {
-            await setDoc(doc(db, 'users', acc.email.toLowerCase()), acc);
-          }
-        });
-
         setAccounts(loadedAccounts);
       }
     });
