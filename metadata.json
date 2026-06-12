@@ -1,0 +1,6 @@
+{
+  "name": "ALS Portal",
+  "description": "An interactive Alternative Learning System (ALS) eLMS featuring learning portals and role-based access control (RBAC) logins for students, teachers, and administrators, complete with achievements and progress tracking.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
