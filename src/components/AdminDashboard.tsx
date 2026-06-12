@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { MOCK_USER_ENROLLMENTS } from '../data';
-import { UserEnrollment, UserAccount, PortalType } from '../types';
+import { UserAccount, PortalType } from '../types';
 
 interface AdminDashboardProps {
   accounts: UserAccount[];
@@ -13,38 +12,11 @@ export default function AdminDashboard({
   onAddAccount,
   onRemoveAccount
 }: AdminDashboardProps) {
-  const [enrollments, setEnrollments] = useState<UserEnrollment[]>(MOCK_USER_ENROLLMENTS);
   const [logMessages, setLogMessages] = useState<string[]>([
     "System check: All 14 remote learning databases synchronized successfully.",
     "Database backup completed. Next automated checkpoint scheduled in 12 hours."
   ]);
   const [notification, setNotification] = useState<string | null>(null);
-
-  const handleApprove = (id: string, name: string) => {
-    setEnrollments(prev => prev.map(item => {
-      if (item.id === id) {
-        return { ...item, status: 'Active' };
-      }
-      return item;
-    }));
-
-    setNotification(`Successfully approved credentials for ${name}. 💚`);
-    setLogMessages(prev => [`Approved credentials for enrollment ID: ${id} (${name})`, ...prev]);
-
-    setTimeout(() => {
-      setNotification(null);
-    }, 4000);
-  };
-
-  const handleDecline = (id: string, name: string) => {
-    setEnrollments(prev => prev.filter(item => item.id !== id));
-    setNotification(`Removed enrollment credential request for ${name}. ⚠️`);
-    setLogMessages(prev => [`Declined or pruned registration request: ${id} (${name})`, ...prev]);
-
-    setTimeout(() => {
-      setNotification(null);
-    }, 4005);
-  };
 
   // Dynamic user account creation states
   const [newAccName, setNewAccName] = useState('');
@@ -57,10 +29,13 @@ export default function AdminDashboard({
   const [newAccSubjects, setNewAccSubjects] = useState<string[]>([]);
 
   const ALS_SUBJECTS = [
-    { value: 'Science', label: '🧪 Science & Ecosystems' },
-    { value: 'Math', label: '🔢 Mathematics (ALS Path)' },
-    { value: 'English', label: '🗣️ English Communication' },
-    { value: 'Life Skills', label: '🛠️ Life Skills & Civics' },
+    { value: 'LS1 English - Communication Skills', label: '🗣️ LS1 English - Communication Skills' },
+    { value: 'LS1 Filipino - Communication Skills', label: '📖 LS1 Filipino - Communication Skills' },
+    { value: 'LS2 Science - Scientific Literacy', label: '🧪 LS2 Science - Scientific Literacy' },
+    { value: 'LS3 Mathematics - Problem Solving', label: '🔢 LS3 Mathematics - Problem Solving' },
+    { value: 'LS4 Life and Career Skills', label: '🛠️ LS4 Life and Career Skills' },
+    { value: 'LS5 Understanding Culture and Society', label: '🌏 LS5 Understanding Culture and Society' },
+    { value: 'LS6 Digital Literacy', label: '💻 LS6 Digital Literacy' },
   ];
 
   const toggleSubject = (value: string) => {
@@ -136,8 +111,8 @@ export default function AdminDashboard({
             <span className="text-[10px] font-bold text-slate-300 uppercase">Active Users</span>
           </div>
           <div className="bg-white/10 px-4 py-2 rounded-xl text-center">
-            <span className="text-lg font-black block text-amber-400">{enrollments.filter(e => e.status === 'Pending').length}</span>
-            <span className="text-[10px] font-bold text-slate-300 uppercase">Pending</span>
+            <span className="text-lg font-black block text-indigo-400">{accounts.length}</span>
+            <span className="text-[10px] font-bold text-slate-300 uppercase">Gateways</span>
           </div>
         </div>
       </div>
@@ -150,74 +125,50 @@ export default function AdminDashboard({
         </div>
       )}
 
-      {/* Verification Queue & System Log */}
+      {/* System Console activity logs & Diagnostics */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        {/* Credentials Verification Queue */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-            <h3 className="font-black text-sm text-slate-800 uppercase tracking-wider">Credentials Verification Queue</h3>
-            <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
-              {enrollments.filter(e => e.status === 'Pending').length} Pending Review
-            </span>
+        {/* System Console activity logs */}
+        <div className="lg:col-span-2 bg-[#0f172a] text-slate-300 p-5 rounded-2xl font-mono text-[11px] shadow-sm space-y-3 border border-slate-800 h-44 overflow-y-auto">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-1">
+            <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping inline-block"></span>
+              Live Operations Terminal
+            </h4>
+            <span className="text-[9px] text-slate-500 uppercase font-bold">Connected</span>
           </div>
-
-          <div className="space-y-3">
-            {enrollments.map((user) => (
-              <div
-                key={user.id}
-                className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all hover:bg-slate-100/60"
-              >
-                <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-full font-bold flex items-center justify-center shrink-0 ${user.colorScheme}`}>
-                    {user.initials}
-                  </div>
-                  <div>
-                    <h4 className="font-extrabold text-sm text-slate-800 leading-tight">{user.name}</h4>
-                    <p className="text-xs text-slate-400 mt-1">Role: {user.role} • Registered {user.joined}</p>
-                    <p className="text-xs font-bold text-indigo-700 mt-0.5">{user.program}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 shrink-0">
-                  {user.status === 'Pending' ? (
-                    <>
-                      <button
-                        onClick={() => handleDecline(user.id, user.name)}
-                        className="bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs px-3.5 py-2 rounded-lg transition-transform active:scale-95"
-                      >
-                        Decline
-                      </button>
-                      <button
-                        onClick={() => handleApprove(user.id, user.name)}
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2 rounded-lg transition-transform active:scale-95 flex items-center gap-1 shadow-sm"
-                      >
-                        <span className="material-symbols-outlined text-xs">verified</span>
-                        Approve
-                      </button>
-                    </>
-                  ) : (
-                    <span className="text-xs font-extrabold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                      Verified &amp; Active
-                    </span>
-                  )}
-                </div>
-              </div>
+          <div className="space-y-2">
+            {logMessages.map((msg, i) => (
+              <p key={i} className="leading-relaxed">
+                <span className="text-[#FF9800] mr-1">&gt;</span> {msg}
+              </p>
             ))}
           </div>
         </div>
 
-        {/* System Console activity logs */}
-        <div className="space-y-6">
-          <div className="bg-slate-900 text-slate-300 p-5 rounded-2xl font-mono text-[11px] shadow-sm space-y-3 border border-slate-800 h-44 overflow-y-auto">
-            <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">System Log Terminal</h4>
-            <div className="space-y-2">
-              {logMessages.map((msg, i) => (
-                <p key={i} className="leading-relaxed">
-                  <span className="text-[#FF9800] mr-1">&gt;</span> {msg}
-                </p>
-              ))}
+        {/* System Integrity / Diagnostics */}
+        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm space-y-4">
+          <h3 className="font-black text-xs text-slate-800 uppercase tracking-wider border-b border-slate-100 pb-2">
+            🔧 Operations Diagnostics
+          </h3>
+          <div className="space-y-3 text-[11px] font-semibold text-slate-600">
+            <div className="flex items-center justify-between">
+              <span>Database Sync Status</span>
+              <span className="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded font-black text-[9px] uppercase tracking-wider">
+                Synchronized
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Gateways Guard Protocols</span>
+              <span className="text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded font-black text-[9px] uppercase tracking-wider">
+                Active
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Next Checkpoint</span>
+              <span className="text-slate-500 bg-slate-100 px-2 py-0.5 rounded font-black text-[9px] font-mono">
+                12h 00m
+              </span>
             </div>
           </div>
         </div>
