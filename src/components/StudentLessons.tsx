@@ -22,6 +22,13 @@ export default function StudentLessons({ onTabChange, onSelectLesson, lessons, c
     'Science': 'Science',
     'English': 'English',
     'Life Skills': 'Life Skills',
+    'LS1 English - Communication Skills': 'English',
+    'LS1 Filipino - Communication Skills': 'English',
+    'LS2 Science - Scientific Literacy': 'Science',
+    'LS3 Mathematics - Problem Solving': 'Math',
+    'LS4 Life and Career Skills': 'Life Skills',
+    'LS5 Understanding Culture and Society': 'Life Skills',
+    'LS6 Digital Literacy': 'Life Skills',
   };
   const enrolledCategories = enrolledSubjects.length > 0
     ? [...new Set(enrolledSubjects.map(s => subjectCategoryMap[s] ?? s))]

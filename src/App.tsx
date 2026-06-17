@@ -13,16 +13,16 @@ import { db } from './firebase';
 import { collection, onSnapshot, doc, setDoc, deleteDoc } from 'firebase/firestore';
 
 export const DEFAULT_ACCOUNTS: UserAccount[] = [
-  { email: 'alex@als.edu', role: 'student', name: 'Alex Johnson', label: 'Alex Johnson (Student)', desc: 'ALS Alternative Secondary Pathway', avatar: '🎓', password: 'password', section: 'Section A', subjects: ['Mathematics', 'Science', 'English', 'Life Skills'] },
+  { email: 'alex@als.edu', role: 'student', name: 'Alex Johnson', label: 'Alex Johnson (Student)', desc: 'ALS Alternative Secondary Pathway', avatar: '🎓', password: 'password', section: 'Section A', subjects: ['LS3 Mathematics - Problem Solving', 'LS2 Science - Scientific Literacy', 'LS1 English - Communication Skills', 'LS4 Life and Career Skills'] },
   { email: 'marcus@als.edu', role: 'teacher', name: 'Mentor Marcus', label: 'Mentor Marcus (Teacher)', desc: 'Regional Instructor (Region IV-A)', avatar: '🧑‍🏫', password: 'password' },
   { email: 'superintendent@als.edu', role: 'admin', name: 'Administrator Superintendent', label: 'Superintendent (Admin)', desc: 'Regional Operations Director', avatar: '🏢', password: 'password' },
-  { email: 'robert@als.edu', role: 'student', name: 'Robert Lim', label: 'Robert Lim (Student)', desc: 'ALS Alternative Secondary Pathway', avatar: '🎓', password: 'password', section: 'Section A', subjects: ['Mathematics', 'Science'] },
-  { email: 'juan@als.edu', role: 'student', name: 'Juan Dela Cruz', label: 'Juan Dela Cruz (Student)', desc: 'ALS Alternative Secondary Pathway', avatar: '🎓', password: 'password', section: 'Section A', subjects: ['Mathematics', 'English', 'Life Skills'] },
-  { email: 'maria@als.edu', role: 'student', name: 'Maria Clara', label: 'Maria Clara (Student)', desc: 'ALS Alternative Secondary Pathway', avatar: '🎓', password: 'password', section: 'Section A', subjects: ['Science', 'English', 'Life Skills'] },
-  { email: 'ana@als.edu', role: 'student', name: 'Ana Santos', label: 'Ana Santos (Student)', desc: 'ALS Alternative Secondary Pathway', avatar: '🎓', password: 'password', section: 'Section B', subjects: ['Mathematics', 'Science'] },
-  { email: 'cardo@als.edu', role: 'student', name: 'Cardo Dalisay', label: 'Cardo Dalisay (Student)', desc: 'ALS Alternative Secondary Pathway', avatar: '🎓', password: 'password', section: 'Section B', subjects: ['Mathematics', 'Life Skills'] },
-  { email: 'jose@als.edu', role: 'student', name: 'Jose Rizal', label: 'Jose Rizal (Student)', desc: 'ALS Alternative Secondary Pathway', avatar: '🎓', password: 'password', section: 'Section B', subjects: ['Science', 'English'] },
-  { email: 'andres@als.edu', role: 'student', name: 'Andres Bonifacio', label: 'Andres Bonifacio (Student)', desc: 'ALS Alternative Secondary Pathway', avatar: '🎓', password: 'password', section: 'Section B', subjects: ['English', 'Life Skills'] },
+  { email: 'robert@als.edu', role: 'student', name: 'Robert Lim', label: 'Robert Lim (Student)', desc: 'ALS Alternative Secondary Pathway', avatar: '🎓', password: 'password', section: 'Section A', subjects: ['LS3 Mathematics - Problem Solving', 'LS2 Science - Scientific Literacy'] },
+  { email: 'juan@als.edu', role: 'student', name: 'Juan Dela Cruz', label: 'Juan Dela Cruz (Student)', desc: 'ALS Alternative Secondary Pathway', avatar: '🎓', password: 'password', section: 'Section A', subjects: ['LS3 Mathematics - Problem Solving', 'LS1 English - Communication Skills', 'LS4 Life and Career Skills'] },
+  { email: 'maria@als.edu', role: 'student', name: 'Maria Clara', label: 'Maria Clara (Student)', desc: 'ALS Alternative Secondary Pathway', avatar: '🎓', password: 'password', section: 'Section A', subjects: ['LS2 Science - Scientific Literacy', 'LS1 English - Communication Skills', 'LS4 Life and Career Skills'] },
+  { email: 'ana@als.edu', role: 'student', name: 'Ana Santos', label: 'Ana Santos (Student)', desc: 'ALS Alternative Secondary Pathway', avatar: '🎓', password: 'password', section: 'Section B', subjects: ['LS3 Mathematics - Problem Solving', 'LS2 Science - Scientific Literacy'] },
+  { email: 'cardo@als.edu', role: 'student', name: 'Cardo Dalisay', label: 'Cardo Dalisay (Student)', desc: 'ALS Alternative Secondary Pathway', avatar: '🎓', password: 'password', section: 'Section B', subjects: ['LS3 Mathematics - Problem Solving', 'LS4 Life and Career Skills'] },
+  { email: 'jose@als.edu', role: 'student', name: 'Jose Rizal', label: 'Jose Rizal (Student)', desc: 'ALS Alternative Secondary Pathway', avatar: '🎓', password: 'password', section: 'Section B', subjects: ['LS2 Science - Scientific Literacy', 'LS1 English - Communication Skills'] },
+  { email: 'andres@als.edu', role: 'student', name: 'Andres Bonifacio', label: 'Andres Bonifacio (Student)', desc: 'ALS Alternative Secondary Pathway', avatar: '🎓', password: 'password', section: 'Section B', subjects: ['LS1 English - Communication Skills', 'LS4 Life and Career Skills'] },
 ];
 
 interface SessionState {
@@ -83,7 +83,15 @@ export default function App() {
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'attendance'), async (snapshot) => {
       if (snapshot.empty) {
-        const subjects = ['Mathematics', 'Science', 'English', 'Life Skills'];
+        const subjects = [
+          'LS1 English - Communication Skills',
+          'LS1 Filipino - Communication Skills',
+          'LS2 Science - Scientific Literacy',
+          'LS3 Mathematics - Problem Solving',
+          'LS4 Life and Career Skills',
+          'LS5 Understanding Culture and Society',
+          'LS6 Digital Literacy'
+        ];
         const sections = ['Section A', 'Section B'];
         const students = DEFAULT_ACCOUNTS.filter(a => a.role === 'student');
         
@@ -146,14 +154,42 @@ export default function App() {
         const students = DEFAULT_ACCOUNTS.filter(a => a.role === 'student');
         
         const mockScores: Record<string, Record<string, number>> = {
-          'alex@als.edu': { 'Mathematics': 85, 'Science': 90, 'English': 88, 'Life Skills': 92 },
-          'robert@als.edu': { 'Mathematics': 58, 'Science': 62 },
-          'juan@als.edu': { 'Mathematics': 45, 'English': 72, 'Life Skills': 75 },
-          'maria@als.edu': { 'Science': 95, 'English': 98, 'Life Skills': 94 },
-          'ana@als.edu': { 'Mathematics': 82, 'Science': 88 },
-          'cardo@als.edu': { 'Mathematics': 72, 'Life Skills': 80 },
-          'jose@als.edu': { 'Science': 99, 'English': 96 },
-          'andres@als.edu': { 'English': 85, 'Life Skills': 89 }
+          'alex@als.edu': {
+            'LS3 Mathematics - Problem Solving': 85,
+            'LS2 Science - Scientific Literacy': 90,
+            'LS1 English - Communication Skills': 88,
+            'LS4 Life and Career Skills': 92
+          },
+          'robert@als.edu': {
+            'LS3 Mathematics - Problem Solving': 58,
+            'LS2 Science - Scientific Literacy': 62
+          },
+          'juan@als.edu': {
+            'LS3 Mathematics - Problem Solving': 45,
+            'LS1 English - Communication Skills': 72,
+            'LS4 Life and Career Skills': 75
+          },
+          'maria@als.edu': {
+            'LS2 Science - Scientific Literacy': 95,
+            'LS1 English - Communication Skills': 98,
+            'LS4 Life and Career Skills': 94
+          },
+          'ana@als.edu': {
+            'LS3 Mathematics - Problem Solving': 82,
+            'LS2 Science - Scientific Literacy': 88
+          },
+          'cardo@als.edu': {
+            'LS3 Mathematics - Problem Solving': 72,
+            'LS4 Life and Career Skills': 80
+          },
+          'jose@als.edu': {
+            'LS2 Science - Scientific Literacy': 99,
+            'LS1 English - Communication Skills': 96
+          },
+          'andres@als.edu': {
+            'LS1 English - Communication Skills': 85,
+            'LS4 Life and Career Skills': 89
+          }
         };
 
         for (const s of students) {

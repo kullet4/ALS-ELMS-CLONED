@@ -255,13 +255,19 @@ export default function AdminDashboard({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Section</label>
-                      <input
-                        type="text"
+                      <select
                         value={newAccSection}
                         onChange={(e) => setNewAccSection(e.target.value)}
-                        placeholder="e.g. Sampaguita, Section A"
-                        className="w-full bg-white border border-slate-200 focus:border-[#526069] rounded-xl p-3 text-xs outline-none font-semibold transition-all shadow-sm"
-                      />
+                        className="w-full bg-white border border-slate-200 focus:border-[#526069] rounded-xl p-3 text-xs outline-none font-bold transition-all shadow-sm"
+                      >
+                        <option value="">— Select Section —</option>
+                        <option value="Sampaguita">Sampaguita</option>
+                        <option value="Narra">Narra</option>
+                        <option value="Jasmine">Jasmine</option>
+                        <option value="Rizal">Rizal</option>
+                        <option value="Agila">Agila</option>
+                        <option value="Mayon">Mayon</option>
+                      </select>
                     </div>
                     <div>
                       <label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Grade Level</label>

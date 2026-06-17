@@ -38,6 +38,29 @@ const ALL_ALS_SUBJECTS = ['Science', 'Math', 'English', 'Life Skills'] as const;
 
 type LessonCategory = 'Math' | 'Science' | 'English' | 'Life Skills';
 
+const isSubjectMatch = (recordSubject: string | undefined, filterSubject: string): boolean => {
+  if (!recordSubject) return false;
+  if (recordSubject === filterSubject) return true;
+  
+  const legacyMap: Record<string, string[]> = {
+    'LS3 Mathematics - Problem Solving': ['Mathematics', 'Math'],
+    'LS2 Science - Scientific Literacy': ['Science'],
+    'LS1 English - Communication Skills': ['English'],
+    'LS4 Life and Career Skills': ['Life Skills']
+  };
+  
+  const fallbacks = legacyMap[filterSubject];
+  if (fallbacks && fallbacks.includes(recordSubject)) {
+    return true;
+  }
+  return false;
+};
+
+const isStudentEnrolledInSubject = (studentSubjects: string[] | undefined, filterSubject: string): boolean => {
+  if (!studentSubjects) return false;
+  return studentSubjects.some(subj => isSubjectMatch(subj, filterSubject));
+};
+
 const ASSET_URLS: Record<LessonCategory, string> = {
   Math: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDMG5BPSp6RF1_qWoB091w0NCI-dfBgRJ48uICFHwNMdJF7HvO-oLb6he03CyyHUZgbhbLYo-CVTS58lgV4TvcpLeqPE0Krh7CEfrt6LXJJqjuYPQPmbSi_jZkRh8AvDwa1zQk0NZYFmJW8HxX4SxWK5txhS4Inqn3H_eT8MIxxVzAew3iCB7tqD9d1G_otijNVkoVpcUnptR2BQoChQYHchioHEPzHQoejGGyAWAQCMRTNWVPHrPG52QTxGZGu3KWipkTE8pA-KRE',
   Science: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAJyvH30uHe26QqhBfpDQuAHjwoyAs1BdvCupuu9Snf3yjhNLq2y3vT35OvoYoFyCU5aVXhCmVGSJ8rmHepnIAcFRkcXOURqyxc0ItCZRWS31xbLTwTRR4amXaHdh1l0mu6m_rNmI21EZ5SX11eafxQ4x9j79WVXaRBhtHf2amoGNcuw0r0EIL90HGJhzCzyC7ivJcYUHSVVgBlUmxEgECDMXhocbOjuErgQdmoJhW0mOVBc0xDGyEODHmMnUoPM_bjUaJzOvuTrqw',
@@ -58,7 +81,7 @@ export default function TeacherDashboard({
   const [notification, setNotification] = useState<string | null>(null);
 
   const [activeTab, setActiveTab] = useState<'overview' | 'attendance' | 'analytics' | 'content'>('overview');
-  const [filterSubject, setFilterSubject] = useState('Mathematics');
+  const [filterSubject, setFilterSubject] = useState('LS1 English - Communication Skills');
   const [filterSection, setFilterSection] = useState('Section A');
   const [filterDate, setFilterDate] = useState(() => {
     return new Date().toISOString().split('T')[0];
@@ -260,14 +283,14 @@ export default function TeacherDashboard({
 
   React.useEffect(() => {
     const existing = attendance.find(
-      a => a.subject === filterSubject && a.section === filterSection && a.date === filterDate
+      a => isSubjectMatch(a.subject, filterSubject) && a.section === filterSection && a.date === filterDate
+    );
+    const enrolled = accounts.filter(
+      a => a.role === 'student' && a.section === filterSection && isStudentEnrolledInSubject(a.subjects, filterSubject)
     );
     if (existing) {
       setLocalRecords(existing.records);
     } else {
-      const enrolled = accounts.filter(
-        a => a.role === 'student' && a.section === filterSection && a.subjects?.includes(filterSubject)
-      );
       const initial: Record<string, 'present' | 'absent' | 'late'> = {};
       enrolled.forEach(s => {
         initial[s.email] = 'present';
@@ -309,7 +332,7 @@ export default function TeacherDashboard({
 
     if (scope === 'day') {
       const enrolled = accounts.filter(
-        s => s.role === 'student' && s.section === filterSection && s.subjects?.includes(filterSubject)
+        s => s.role === 'student' && s.section === filterSection && isStudentEnrolledInSubject(s.subjects, filterSubject)
       );
       enrolled.forEach(student => {
         const status = localRecords[student.email] || 'present';
@@ -324,11 +347,11 @@ export default function TeacherDashboard({
       });
     } else {
       const history = attendance.filter(
-        a => a.subject === filterSubject && a.section === filterSection
+        a => isSubjectMatch(a.subject, filterSubject) && a.section === filterSection
       ).sort((a, b) => b.date.localeCompare(a.date));
 
       const enrolled = accounts.filter(
-        s => s.role === 'student' && s.section === filterSection && s.subjects?.includes(filterSubject)
+        s => s.role === 'student' && s.section === filterSection && isStudentEnrolledInSubject(s.subjects, filterSubject)
       );
 
       history.forEach(record => {
@@ -492,16 +515,19 @@ export default function TeacherDashboard({
           {/* Filters */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-150 shadow-2xs">
             <div>
-              <label className="text-[10px] font-black text-slate-550 uppercase block mb-1">Select Subject</label>
+              <label className="text-[10px] font-black text-slate-555 uppercase block mb-1">Select Subject</label>
               <select
                 value={filterSubject}
                 onChange={(e) => setFilterSubject(e.target.value)}
                 className="w-full bg-white border border-slate-200 focus:border-[#526069] rounded-xl p-2.5 text-xs outline-none font-bold shadow-sm"
               >
-                <option value="Mathematics">Mathematics</option>
-                <option value="Science">Science</option>
-                <option value="English">English</option>
-                <option value="Life Skills">Life Skills</option>
+                <option value="LS1 English - Communication Skills">LS1 English - Communication Skills</option>
+                <option value="LS1 Filipino - Communication Skills">LS1 Filipino - Communication Skills</option>
+                <option value="LS2 Science - Scientific Literacy">LS2 Science - Scientific Literacy</option>
+                <option value="LS3 Mathematics - Problem Solving">LS3 Mathematics - Problem Solving</option>
+                <option value="LS4 Life and Career Skills">LS4 Life and Career Skills</option>
+                <option value="LS5 Understanding Culture and Society">LS5 Understanding Culture and Society</option>
+                <option value="LS6 Digital Literacy">LS6 Digital Literacy</option>
               </select>
             </div>
             <div>
@@ -530,14 +556,14 @@ export default function TeacherDashboard({
           <div className="space-y-4">
             <div className="flex justify-between items-center px-1">
               <span className="text-xs font-black text-slate-455 uppercase tracking-wider">
-                Students Enrolled ({accounts.filter(s => s.role === 'student' && s.section === filterSection && s.subjects?.includes(filterSubject)).length})
+                Students Enrolled ({accounts.filter(s => s.role === 'student' && s.section === filterSection && isStudentEnrolledInSubject(s.subjects, filterSubject)).length})
               </span>
               <span className="text-[10px] text-slate-400 font-semibold italic">
                 *Changes are stored locally until synced.
               </span>
             </div>
 
-            {accounts.filter(s => s.role === 'student' && s.section === filterSection && s.subjects?.includes(filterSubject)).length === 0 ? (
+            {accounts.filter(s => s.role === 'student' && s.section === filterSection && isStudentEnrolledInSubject(s.subjects, filterSubject)).length === 0 ? (
               <div className="text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-200">
                 <span className="material-symbols-outlined text-3xl text-slate-350">group_off</span>
                 <p className="text-xs font-bold text-slate-500 mt-2">No students enrolled in {filterSection} for {filterSubject}.</p>
@@ -545,7 +571,7 @@ export default function TeacherDashboard({
             ) : (
               <div className="border border-slate-100 rounded-xl overflow-hidden shadow-2xs bg-white">
                 <div className="divide-y divide-slate-100">
-                  {accounts.filter(s => s.role === 'student' && s.section === filterSection && s.subjects?.includes(filterSubject)).map(student => {
+                  {accounts.filter(s => s.role === 'student' && s.section === filterSection && isStudentEnrolledInSubject(s.subjects, filterSubject)).map(student => {
                     const status = localRecords[student.email] || 'present';
                     return (
                       <div key={student.email} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50/50 transition-colors">
@@ -589,7 +615,7 @@ export default function TeacherDashboard({
             )}
           </div>
 
-          {accounts.filter(s => s.role === 'student' && s.section === filterSection && s.subjects?.includes(filterSubject)).length > 0 && (
+          {accounts.filter(s => s.role === 'student' && s.section === filterSection && isStudentEnrolledInSubject(s.subjects, filterSubject)).length > 0 && (
             <div className="pt-3 border-t border-slate-100 flex justify-end">
               <button
                 type="button"
@@ -607,13 +633,13 @@ export default function TeacherDashboard({
       {/* ── Student Analytics Tab ── */}
       {activeTab === 'analytics' && (() => {
         const enrolled = accounts.filter(
-          s => s.role === 'student' && s.section === filterSection && s.subjects?.includes(filterSubject)
+          s => s.role === 'student' && s.section === filterSection && isStudentEnrolledInSubject(s.subjects, filterSubject)
         );
         const subAttendance = attendance.filter(
-          a => a.subject === filterSubject && a.section === filterSection
+          a => isSubjectMatch(a.subject, filterSubject) && a.section === filterSection
         );
         const subGrades = grades.filter(
-          g => g.subject === filterSubject && g.section === filterSection
+          g => isSubjectMatch(g.subject, filterSubject) && g.section === filterSection
         );
 
         let totalLogsExpected = 0;
@@ -674,10 +700,13 @@ export default function TeacherDashboard({
                 <div>
                   <label className="text-[10px] font-black text-slate-550 uppercase block mb-1">Filter Subject</label>
                   <select value={filterSubject} onChange={(e) => setFilterSubject(e.target.value)} className="w-full bg-white border border-slate-200 focus:border-[#526069] rounded-xl p-2.5 text-xs outline-none font-bold shadow-sm">
-                    <option value="Mathematics">Mathematics</option>
-                    <option value="Science">Science</option>
-                    <option value="English">English</option>
-                    <option value="Life Skills">Life Skills</option>
+                    <option value="LS1 English - Communication Skills">LS1 English - Communication Skills</option>
+                    <option value="LS1 Filipino - Communication Skills">LS1 Filipino - Communication Skills</option>
+                    <option value="LS2 Science - Scientific Literacy">LS2 Science - Scientific Literacy</option>
+                    <option value="LS3 Mathematics - Problem Solving">LS3 Mathematics - Problem Solving</option>
+                    <option value="LS4 Life and Career Skills">LS4 Life and Career Skills</option>
+                    <option value="LS5 Understanding Culture and Society">LS5 Understanding Culture and Society</option>
+                    <option value="LS6 Digital Literacy">LS6 Digital Literacy</option>
                   </select>
                 </div>
                 <div>
