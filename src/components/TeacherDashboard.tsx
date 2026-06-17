@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { MOCK_STUDENT_ALERTS, MOCK_STUDENT_INSIGHTS } from '../data';
-import { StudentInsight, Lesson, UserAccount, AttendanceRecord, StudentGrade } from '../types';
+
+import { Lesson, UserAccount, AttendanceRecord, StudentGrade } from '../types';
 import { db } from '../firebase';
 import { doc, setDoc } from 'firebase/firestore';
 
@@ -54,13 +54,7 @@ export default function TeacherDashboard({
   grades,
   currentUser
 }: TeacherDashboardProps) {
-  const [insights, setInsights] = useState<StudentInsight[]>(MOCK_STUDENT_INSIGHTS);
-  const [curriculumModules, setCurriculumModules] = useState([
-    { id: 'c-1', title: 'Decimals & Percentages', category: 'Math', duration: '25 mins', created: '2 days ago' },
-    { id: 'c-2', title: 'Solar System Dynamics', category: 'Science', duration: '20 mins', created: 'Yesterday' }
-  ]);
-  const [newTitle, setNewTitle] = useState('');
-  const [newCat, setNewCat] = useState('Math');
+
   const [notification, setNotification] = useState<string | null>(null);
 
   const [activeTab, setActiveTab] = useState<'overview' | 'attendance' | 'analytics' | 'content'>('overview');
@@ -287,41 +281,8 @@ export default function TeacherDashboard({
     setTimeout(() => {
       setNotification(null);
     }, 4000);
-
-    setInsights(prev => prev.map(item => {
-      if (item.name === studentName) {
-        return {
-          ...item,
-          status: 'Assistance Dispatched (Checking progress)',
-          statusType: 'mastered',
-          score: Math.min(100, item.score + 15)
-        };
-      }
-      return item;
-    }));
   };
 
-  const handleCreateModule = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTitle.trim()) return;
-
-    setCurriculumModules(prev => [
-      ...prev,
-      {
-        id: `c-${Date.now()}`,
-        title: newTitle.trim(),
-        category: newCat,
-        duration: '15 mins',
-        created: 'Just now'
-      }
-    ]);
-    setNewTitle('');
-    
-    setNotification(`Successfully drafted dynamic module "${newTitle}" inside curriculum resources! ✨`);
-    setTimeout(() => {
-      setNotification(null);
-    }, 4000);
-  };
 
   const handleSaveAttendance = async () => {
     const id = `${filterSubject.replace(/\s+/g, '')}_${filterSection.replace(/\s+/g, '')}_${filterDate}`;
@@ -489,151 +450,17 @@ export default function TeacherDashboard({
 
       {/* ── Overview Tab ── */}
       {activeTab === 'overview' && (
-        <>
-          {/* Quick System Alerts */}
-          <div className="space-y-4 animate-in fade-in duration-200">
-            <h3 className="text-sm font-black text-[#526069] uppercase tracking-wider">Quick Alerts</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {MOCK_STUDENT_ALERTS.map((alt) => (
-                <div 
-                  key={alt.id}
-                  className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex items-start gap-4 hover:shadow-md transition-shadow"
-                >
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                    alt.type === 'pending' ? 'bg-amber-50 text-amber-600' :
-                    alt.type === 'post' ? 'bg-blue-50 text-blue-600' :
-                    'bg-indigo-50 text-indigo-700'
-                  }`}>
-                    <span className="material-symbols-outlined text-[22px]">{alt.icon}</span>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h4 className="font-extrabold text-xs text-slate-800 leading-tight truncate">{alt.title}</h4>
-                    <p className="text-[11px] text-slate-400 mt-0.5 truncate">{alt.description}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+        <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm text-center space-y-3 animate-in fade-in duration-200">
+          <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-650 flex items-center justify-center mx-auto">
+            <span className="material-symbols-outlined text-[24px]">dashboard</span>
           </div>
-
-          {/* Student Insights */}
-          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-              <div>
-                <h3 className="text-lg font-black text-slate-800">Student Insights</h3>
-                <p className="text-xs text-slate-400 mt-0.5">Live performance tracking and intervention tools.</p>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              {insights.map((item) => (
-                <div key={item.name} className="p-4 bg-slate-50 border border-slate-100 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-3.5">
-                    <div className="w-10 h-10 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 font-bold flex items-center justify-center text-sm uppercase shrink-0">
-                      {item.name.split(' ').map((n: string) => n[0]).join('')}
-                    </div>
-                    <div>
-                      <h4 className="font-extrabold text-xs text-slate-800 leading-none">{item.name}</h4>
-                      <p className="text-[10.5px] text-slate-400 mt-1">{item.subject} — Score: {item.score}%</p>
-                      <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-md mt-1 inline-block ${
-                        item.statusType === 'mastered' ? 'bg-emerald-100 text-emerald-700' :
-                        item.statusType === 'struggling' ? 'bg-rose-100 text-rose-700' :
-                        'bg-amber-100 text-amber-700'
-                      }`}>{item.status}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 self-start sm:self-center">
-                    {item.statusType === 'struggling' && (
-                      <button
-                        type="button"
-                        onClick={() => handleSendHelp(item.name, item.subject)}
-                        className="bg-[#9C27B0] hover:bg-[#8e24aa] text-white font-extrabold text-[10.5px] px-3.5 py-2 rounded-lg transition-all active:scale-95 shadow-sm inline-flex items-center gap-1.5 cursor-pointer"
-                      >
-                        <span className="material-symbols-outlined text-[15px]">send</span>
-                        Send Help
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+          <div>
+            <h3 className="text-base font-black text-slate-800">Welcome to your Dashboard</h3>
+            <p className="text-xs text-slate-450 mt-1 max-w-sm mx-auto">
+              Select any of the tabs above to manage attendance logs, analyze student academic performances, or author lessons in the content builder.
+            </p>
           </div>
-
-          {/* Curriculum Resource Builder */}
-          <section className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
-              <div>
-                <h3 className="text-lg font-black text-slate-800">Dynamic Curriculum Modules</h3>
-                <p className="text-xs text-slate-400 mt-0.5">Author custom lessons instantly accessible by alternative learning students.</p>
-              </div>
-              <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">{curriculumModules.length} Active Drafts</span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="md:col-span-2 space-y-3">
-                <h4 className="font-extrabold text-xs text-slate-500 uppercase tracking-wider">Draft Lessons Ready To Publish</h4>
-                <div className="space-y-3">
-                  {curriculumModules.map((mod) => (
-                    <div 
-                      key={mod.id}
-                      className="p-4 bg-slate-50 border border-slate-100 hover:border-indigo-150 rounded-xl flex items-center justify-between gap-4 transition-colors"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-indigo-50 text-indigo-700 rounded-lg flex items-center justify-center shrink-0">
-                          <span className="material-symbols-outlined">assignment</span>
-                        </div>
-                        <div>
-                          <h5 className="font-extrabold text-sm text-slate-800 leading-tight">{mod.title}</h5>
-                          <p className="text-xs text-slate-400 mt-1">Category: {mod.category} • {mod.duration} • Published {mod.created}</p>
-                        </div>
-                      </div>
-                      <span className="text-xs font-extrabold text-emerald-600 flex items-center gap-1 shrink-0 bg-emerald-50 px-2.5 py-1 rounded-full">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                        Ready
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="bg-slate-50 p-5 rounded-xl border border-slate-100 h-fit">
-                <h4 className="font-extrabold text-xs text-slate-700 uppercase tracking-wider mb-4">Create Custom Module</h4>
-                <form onSubmit={handleCreateModule} className="space-y-3">
-                  <div>
-                    <label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Module Title</label>
-                    <input 
-                      type="text"
-                      value={newTitle}
-                      onChange={(e) => setNewTitle(e.target.value)}
-                      placeholder="e.g. Percentage & Ratios"
-                      className="w-full bg-white border border-slate-200 focus:border-[#526069] rounded-lg p-2.5 text-xs outline-none transition-colors"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Category</label>
-                    <select 
-                      value={newCat} 
-                      onChange={(e) => setNewCat(e.target.value)}
-                      className="w-full bg-white border border-slate-200 focus:border-[#526069] rounded-lg p-2.5 text-xs outline-none transition-colors"
-                    >
-                      <option value="Math">Math</option>
-                      <option value="Science">Science</option>
-                      <option value="English">English</option>
-                      <option value="Life Skills">Life Skills</option>
-                    </select>
-                  </div>
-                  <button 
-                    type="submit"
-                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs p-3 rounded-lg transition-transform active:scale-95 shadow-sm"
-                  >
-                    Publish Lesson Block
-                  </button>
-                </form>
-              </div>
-            </div>
-          </section>
-        </>
+        </div>
       )}
 
       {/* ── Attendance Checker Tab ── */}

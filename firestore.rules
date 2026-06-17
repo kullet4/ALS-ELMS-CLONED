@@ -1,0 +1,11 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ALS-ELMS: This app uses a custom session system (not Firebase Auth).
+    // All Firestore operations are performed client-side from the app itself.
+    // Allow full read/write access for this sandboxed demo environment.
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}

@@ -4,7 +4,7 @@ import { UserAccount, PortalType } from '../types';
 interface AdminDashboardProps {
   accounts: UserAccount[];
   onAddAccount: (account: UserAccount) => void;
-  onRemoveAccount: (email: string) => void;
+  onRemoveAccount: (email: string) => Promise<boolean>;
 }
 
 export default function AdminDashboard({
@@ -390,11 +390,17 @@ export default function AdminDashboard({
                     </div>
 
                     {!isSystemDefault ? (
-                      <button
+                       <button
                         type="button"
-                        onClick={() => {
+                        onClick={async () => {
                           if (confirm(`Are you sure you want to remove the gateway access for ${acc.name}?`)) {
-                            onRemoveAccount(acc.email);
+                            const success = await onRemoveAccount(acc.email);
+                            if (success) {
+                              setNotification(`Gateway access revoked for ${acc.name}. ✅`);
+                              setLogMessages(prev => [`Revoked Portal RBAC identity: ${acc.name} (${acc.email})`, ...prev]);
+                            } else {
+                              setNotification(`Failed to remove ${acc.name}. Check Firestore permissions or console. ❌`);
+                            }
                           }
                         }}
                         className="text-slate-400 hover:text-rose-600 hover:bg-rose-50/50 p-2 rounded-lg transition-colors cursor-pointer shrink-0"

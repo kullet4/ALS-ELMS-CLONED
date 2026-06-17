@@ -239,11 +239,45 @@ export default function App() {
   };
 
   const handleAddAccount = async (newAcc: UserAccount) => {
-    await setDoc(doc(db, 'users', newAcc.email.toLowerCase()), newAcc);
+    try {
+      await setDoc(doc(db, 'users', newAcc.email.toLowerCase()), newAcc);
+    } catch (err) {
+      console.error('[ALS] Failed to add account to Firestore:', err);
+      throw err;
+    }
   };
 
-  const handleRemoveAccount = async (email: string) => {
-    await deleteDoc(doc(db, 'users', email.toLowerCase()));
+  const handleRemoveAccount = async (email: string): Promise<boolean> => {
+    try {
+      // 1. Delete from Firestore
+      await deleteDoc(doc(db, 'users', email.toLowerCase()));
+
+      // 2. Delete from Firebase Authentication via Admin API
+      try {
+        const res = await fetch(`/api/auth-user?email=${encodeURIComponent(email.toLowerCase())}`, {
+          method: 'DELETE',
+        });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          console.warn('[ALS] Auth delete returned non-OK:', body);
+        } else {
+          const body = await res.json();
+          if (body.skipped) {
+            console.info(`[ALS] Auth user not found for ${email} — Firestore-only account, no Auth entry to delete.`);
+          } else {
+            console.info(`[ALS] Firebase Auth user deleted: ${email}`);
+          }
+        }
+      } catch (authErr) {
+        // Auth delete is best-effort — don't block the UI if the API is unreachable
+        console.warn('[ALS] Could not reach Admin API to delete Auth user:', authErr);
+      }
+
+      return true;
+    } catch (err) {
+      console.error('[ALS] Failed to remove account from Firestore:', err);
+      return false;
+    }
   };
 
   // If there's no active authenticated session, direct to the RBAC Login Gateway
