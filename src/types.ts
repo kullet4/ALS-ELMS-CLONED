@@ -26,7 +26,7 @@ export interface LessonQuiz {
 export interface Lesson {
   id: string;
   title: string;
-  category: 'Math' | 'Science' | 'English' | 'Life Skills';
+  category: 'LS1 English' | 'LS1 Filipino' | 'LS2 Science' | 'LS3 Mathematics' | 'LS4 Life Skills' | 'LS5 Culture & Society' | 'LS6 Digital Literacy';
   level: number;
   duration: string;
   description: string;

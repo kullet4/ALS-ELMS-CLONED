@@ -17,22 +17,25 @@ export default function StudentLessons({ onTabChange, onSelectLesson, lessons, c
 
   // Map subject names from UserAccount format to Lesson category format
   const subjectCategoryMap: Record<string, string> = {
-    'Mathematics': 'Math',
-    'Math': 'Math',
-    'Science': 'Science',
-    'English': 'English',
-    'Life Skills': 'Life Skills',
-    'LS1 English - Communication Skills': 'English',
-    'LS1 Filipino - Communication Skills': 'English',
-    'LS2 Science - Scientific Literacy': 'Science',
-    'LS3 Mathematics - Problem Solving': 'Math',
-    'LS4 Life and Career Skills': 'Life Skills',
-    'LS5 Understanding Culture and Society': 'Life Skills',
-    'LS6 Digital Literacy': 'Life Skills',
+    // Full LS names from admin assignment
+    'LS1 English - Communication Skills': 'LS1 English',
+    'LS1 Filipino - Communication Skills': 'LS1 Filipino',
+    'LS2 Science - Scientific Literacy': 'LS2 Science',
+    'LS3 Mathematics - Problem Solving': 'LS3 Mathematics',
+    'LS4 Life and Career Skills': 'LS4 Life Skills',
+    'LS5 Understanding Culture and Society': 'LS5 Culture & Society',
+    'LS6 Digital Literacy': 'LS6 Digital Literacy',
+    // Short aliases (backward compat)
+    'Mathematics': 'LS3 Mathematics',
+    'Math': 'LS3 Mathematics',
+    'Science': 'LS2 Science',
+    'English': 'LS1 English',
+    'Filipino': 'LS1 Filipino',
+    'Life Skills': 'LS4 Life Skills',
   };
   const enrolledCategories = enrolledSubjects.length > 0
     ? [...new Set(enrolledSubjects.map(s => subjectCategoryMap[s] ?? s))]
-    : ['Math', 'Science', 'English', 'Life Skills'];
+    : ['LS1 English', 'LS1 Filipino', 'LS2 Science', 'LS3 Mathematics', 'LS4 Life Skills', 'LS5 Culture & Society', 'LS6 Digital Literacy'];
 
   // Filter lessons based on category selection, search query, and enrolled subjects
   const filteredLessons = lessons.filter(l => {
@@ -62,10 +65,13 @@ export default function StudentLessons({ onTabChange, onSelectLesson, lessons, c
     ).length;
 
   const categories = [
-    { title: 'Math', icon: 'calculate', colorClass: 'bg-indigo-50 border-indigo-100 hover:border-indigo-300 text-indigo-700', activeClass: 'ring-2 ring-indigo-500' },
-    { title: 'Science', icon: 'biotech', colorClass: 'bg-emerald-50 border-emerald-100 hover:border-emerald-300 text-emerald-700', activeClass: 'ring-2 ring-emerald-500' },
-    { title: 'English', icon: 'translate', colorClass: 'bg-amber-50 border-amber-100 hover:border-amber-300 text-amber-700', activeClass: 'ring-2 ring-amber-500' },
-    { title: 'Life Skills', icon: 'volunteer_activism', colorClass: 'bg-rose-50 border-rose-100 hover:border-rose-300 text-rose-700', activeClass: 'ring-2 ring-rose-500' }
+    { title: 'LS1 English',          icon: 'menu_book',           colorClass: 'bg-amber-50 border-amber-100 hover:border-amber-300 text-amber-700',    activeClass: 'ring-2 ring-amber-500' },
+    { title: 'LS1 Filipino',         icon: 'translate',           colorClass: 'bg-orange-50 border-orange-100 hover:border-orange-300 text-orange-700', activeClass: 'ring-2 ring-orange-500' },
+    { title: 'LS2 Science',          icon: 'biotech',             colorClass: 'bg-emerald-50 border-emerald-100 hover:border-emerald-300 text-emerald-700', activeClass: 'ring-2 ring-emerald-500' },
+    { title: 'LS3 Mathematics',      icon: 'calculate',           colorClass: 'bg-indigo-50 border-indigo-100 hover:border-indigo-300 text-indigo-700', activeClass: 'ring-2 ring-indigo-500' },
+    { title: 'LS4 Life Skills',      icon: 'volunteer_activism',  colorClass: 'bg-rose-50 border-rose-100 hover:border-rose-300 text-rose-700',       activeClass: 'ring-2 ring-rose-500' },
+    { title: 'LS5 Culture & Society',icon: 'public',              colorClass: 'bg-purple-50 border-purple-100 hover:border-purple-300 text-purple-700', activeClass: 'ring-2 ring-purple-500' },
+    { title: 'LS6 Digital Literacy', icon: 'computer',            colorClass: 'bg-sky-50 border-sky-100 hover:border-sky-300 text-sky-700',            activeClass: 'ring-2 ring-sky-500' },
   ];
 
   return (
@@ -114,8 +120,8 @@ export default function StudentLessons({ onTabChange, onSelectLesson, lessons, c
         )}
       </div>
 
-      {/* BENTO CATEGORIES GRID */}
-      <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* BENTO CATEGORIES GRID — 3 on mobile, up to 4 or 7 on wider screens */}
+      <section className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 gap-3">
         {categories.map((cat) => {
           const isSelected = selectedCategory === cat.title;
           const isEnrolled = enrolledCategories.includes(cat.title);
@@ -211,9 +217,12 @@ export default function StudentLessons({ onTabChange, onSelectLesson, lessons, c
                 <div className="flex flex-col justify-center min-w-0 flex-1">
                   <div className="flex flex-wrap gap-1.5 mb-1.5">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase w-fit ${
-                      l.category === 'Math' ? 'bg-indigo-50 text-indigo-700' :
-                      l.category === 'Science' ? 'bg-emerald-50 text-emerald-700' :
-                      l.category === 'English' ? 'bg-amber-50 text-amber-700' :
+                      l.category === 'LS3 Mathematics'      ? 'bg-indigo-50 text-indigo-700' :
+                      l.category === 'LS2 Science'          ? 'bg-emerald-50 text-emerald-700' :
+                      l.category === 'LS1 English'          ? 'bg-amber-50 text-amber-700' :
+                      l.category === 'LS1 Filipino'         ? 'bg-orange-50 text-orange-700' :
+                      l.category === 'LS5 Culture & Society'? 'bg-purple-50 text-purple-700' :
+                      l.category === 'LS6 Digital Literacy' ? 'bg-sky-50 text-sky-700' :
                       'bg-rose-50 text-rose-700'
                     }`}>
                       {l.category} • Level {l.level}
@@ -240,9 +249,13 @@ export default function StudentLessons({ onTabChange, onSelectLesson, lessons, c
                     ) : (
                       <div className="flex items-center gap-1.5 text-slate-400">
                         <span className="material-symbols-outlined text-[13px]">
-                          {l.category === 'Math' ? 'calculate' : 
-                           l.category === 'Science' ? 'schedule' : 
-                           l.category === 'English' ? 'stars' : 'emoji_events'}
+                          {l.category === 'LS3 Mathematics'       ? 'calculate' : 
+                           l.category === 'LS2 Science'           ? 'schedule' : 
+                           l.category === 'LS1 English'           ? 'stars' :
+                           l.category === 'LS1 Filipino'          ? 'translate' :
+                           l.category === 'LS5 Culture & Society' ? 'public' :
+                           l.category === 'LS6 Digital Literacy'  ? 'computer' :
+                           'emoji_events'}
                         </span>
                         <span className="text-[11px] font-semibold text-slate-500">{l.rewardText}</span>
                       </div>

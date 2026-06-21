@@ -2,11 +2,19 @@ import React, { useState } from 'react';
 import { Lesson } from '../types';
 
 const categoryDefaults: Record<string, string> = {
-  Math: 'https://images.unsplash.com/photo-1596495578065-6e0763fa1118?auto=format&fit=crop&w=1200&q=80',
+  'LS3 Mathematics':      'https://images.unsplash.com/photo-1596495578065-6e0763fa1118?auto=format&fit=crop&w=1200&q=80',
+  'LS2 Science':          'https://images.unsplash.com/photo-1507668077129-56e32842fceb?auto=format&fit=crop&w=1200&q=80',
+  'LS1 English':          'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=1200&q=80',
+  'LS1 Filipino':         'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=1200&q=80',
+  'LS4 Life Skills':      'https://images.unsplash.com/photo-1526367790999-015078648c2a?auto=format&fit=crop&w=1200&q=80',
+  'LS5 Culture & Society':'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1200&q=80',
+  'LS6 Digital Literacy': 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80',
+  // Legacy aliases for backward compat with any Firestore docs still using old names
+  Math:    'https://images.unsplash.com/photo-1596495578065-6e0763fa1118?auto=format&fit=crop&w=1200&q=80',
   Science: 'https://images.unsplash.com/photo-1507668077129-56e32842fceb?auto=format&fit=crop&w=1200&q=80',
   English: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=1200&q=80',
-  Filipino: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=1200&q=80',
-  Social: 'https://images.unsplash.com/photo-1526367790999-015078648c2a?auto=format&fit=crop&w=1200&q=80',
+  Filipino:'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=1200&q=80',
+  Social:  'https://images.unsplash.com/photo-1526367790999-015078648c2a?auto=format&fit=crop&w=1200&q=80',
   default: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1200&q=80'
 };
 
@@ -115,7 +123,8 @@ export default function ActiveClassroom({ lesson, onAddCoins, onClose }: ActiveC
 
   // Tailored questions for custom Supabase category assets
   const getSupabaseQuiz = () => {
-    switch (lesson.category) {
+    switch (lesson.category as string) {
+      case 'LS3 Mathematics':
       case 'Math':
         return {
           question: 'If an ALS student completes 3 units every 2 days, what is the unit rate of completions per day?',
@@ -127,6 +136,7 @@ export default function ActiveClassroom({ lesson, onAddCoins, onClose }: ActiveC
           correct: 'A',
           explanation: 'Exactly! 3 divided by 2 is 1.5 units per day. You have mastered ratios from this Supabase Math worksheet! +100 Coins added.'
         };
+      case 'LS2 Science':
       case 'Science':
         return {
           question: 'Which of the following describes the biological function of trees during Carbon Fixation?',
@@ -138,6 +148,7 @@ export default function ActiveClassroom({ lesson, onAddCoins, onClose }: ActiveC
           correct: 'A',
           explanation: 'Spot on! Photosynthesis enables carbon fixation, lowering pollutants. Magnificent work! +105 Coins added.'
         };
+      case 'LS1 English':
       case 'English':
         return {
           question: 'In standard communicative writing, why is outlining a blueprint critical before draft generation?',
@@ -148,6 +159,40 @@ export default function ActiveClassroom({ lesson, onAddCoins, onClose }: ActiveC
           ],
           correct: 'A',
           explanation: 'Excellent choice! Pre-draft outlines establish sequential hierarchy in communication. +100 Coins added.'
+        };
+      case 'LS1 Filipino':
+      case 'Filipino':
+        return {
+          question: 'Bakit mahalaga ang wasto at malinaw na pakikipag-usap sa pang-araw-araw na buhay?',
+          options: [
+            { key: 'A', text: 'A) Nakakatulong ito upang maipahayag nang maayos ang ating mga ideya at damdamin' },
+            { key: 'B', text: 'B) Hindi ito mahalaga sa makabagong lipunan' },
+            { key: 'C', text: 'C) Para lamang sa mga propesyonal' }
+          ],
+          correct: 'A',
+          explanation: 'Tama! Ang malinaw na komunikasyon ay susi sa matagumpay na pakikipag-ugnayan sa lipunan. +100 Coins added.'
+        };
+      case 'LS5 Culture & Society':
+        return {
+          question: 'Which best describes why understanding local culture is important for community development?',
+          options: [
+            { key: 'A', text: 'A) It helps people respect traditions and work together effectively' },
+            { key: 'B', text: 'B) Culture has no impact on development' },
+            { key: 'C', text: 'C) Only external factors matter for progress' }
+          ],
+          correct: 'A',
+          explanation: 'Great insight! Cultural understanding fosters unity and drives inclusive community progress. +100 Coins added.'
+        };
+      case 'LS6 Digital Literacy':
+        return {
+          question: 'What is the most important practice when using online information for research?',
+          options: [
+            { key: 'A', text: 'A) Verify sources and cross-check facts before using the information' },
+            { key: 'B', text: 'B) Accept all online content as true without checking' },
+            { key: 'C', text: 'C) Only use social media as a source' }
+          ],
+          correct: 'A',
+          explanation: 'Excellent! Critical evaluation of digital sources is a core digital literacy skill. +100 Coins added.'
         };
       default:
         return {
