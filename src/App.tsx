@@ -10,7 +10,7 @@ import ActiveClassroom from './components/ActiveClassroom';
 import Login from './components/Login';
 import { MOCK_LESSONS } from './data';
 import { db } from './firebase';
-import { collection, onSnapshot, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
 
 export const DEFAULT_ACCOUNTS: UserAccount[] = [
   { email: 'alex@als.edu', role: 'student', name: 'Alex Johnson', label: 'Alex Johnson (Student)', desc: 'ALS Alternative Secondary Pathway', avatar: '🎓', password: 'password', section: 'Section A', subjects: ['LS3 Mathematics - Problem Solving', 'LS2 Science - Scientific Literacy', 'LS1 English - Communication Skills', 'LS4 Life and Career Skills'] },
@@ -40,185 +40,6 @@ export default function App() {
     const saved = localStorage.getItem('als_session');
     return saved ? JSON.parse(saved) : null;
   });
-
-  // Listen to accounts from Firestore
-  useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, 'users'), (snapshot) => {
-      if (snapshot.empty) {
-        DEFAULT_ACCOUNTS.forEach(async (acc) => {
-          await setDoc(doc(db, 'users', acc.email.toLowerCase()), acc);
-        });
-        setAccounts(DEFAULT_ACCOUNTS);
-      } else {
-        const loadedAccounts: UserAccount[] = [];
-        snapshot.forEach((doc) => {
-          loadedAccounts.push(doc.data() as UserAccount);
-        });
-        setAccounts(loadedAccounts);
-      }
-    });
-    return () => unsubscribe();
-  }, []);
-
-  // Listen to lessons from Firestore
-  useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, 'lessons'), (snapshot) => {
-      if (snapshot.empty) {
-        MOCK_LESSONS.forEach(async (lesson) => {
-          await setDoc(doc(db, 'lessons', lesson.id), lesson);
-        });
-        setLessons(MOCK_LESSONS);
-      } else {
-        const loadedLessons: Lesson[] = [];
-        snapshot.forEach((doc) => {
-          loadedLessons.push(doc.data() as Lesson);
-        });
-        setLessons(loadedLessons);
-      }
-    });
-    return () => unsubscribe();
-  }, []);
-
-  // Listen to attendance from Firestore with 10-day historical data seeder
-  useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, 'attendance'), async (snapshot) => {
-      if (snapshot.empty) {
-        const subjects = [
-          'LS1 English - Communication Skills',
-          'LS1 Filipino - Communication Skills',
-          'LS2 Science - Scientific Literacy',
-          'LS3 Mathematics - Problem Solving',
-          'LS4 Life and Career Skills',
-          'LS5 Understanding Culture and Society',
-          'LS6 Digital Literacy'
-        ];
-        const sections = ['Section A', 'Section B'];
-        const students = DEFAULT_ACCOUNTS.filter(a => a.role === 'student');
-        
-        // Generate last 10 school days (excluding weekends)
-        const dates: string[] = [];
-        let d = new Date();
-        while (dates.length < 10) {
-          d.setDate(d.getDate() - 1);
-          const day = d.getDay();
-          if (day !== 0 && day !== 6) { // Not Sat/Sun
-            dates.push(d.toISOString().split('T')[0]);
-          }
-        }
-
-        for (const date of dates) {
-          for (const subject of subjects) {
-            for (const section of sections) {
-              const secStudents = students.filter(s => s.section === section && s.subjects?.includes(subject));
-              if (secStudents.length === 0) continue;
-
-              const records: Record<string, 'present' | 'absent' | 'late'> = {};
-              secStudents.forEach(s => {
-                const rand = Math.random();
-                if (s.email === 'robert@als.edu') {
-                  records[s.email] = rand < 0.55 ? 'present' : (rand < 0.90 ? 'absent' : 'late');
-                } else if (s.email === 'juan@als.edu') {
-                  records[s.email] = rand < 0.60 ? 'present' : (rand < 0.92 ? 'absent' : 'late');
-                } else {
-                  records[s.email] = rand < 0.85 ? 'present' : (rand < 0.95 ? 'late' : 'absent');
-                }
-              });
-
-              const id = `${subject.replace(/\s+/g, '')}_${section.replace(/\s+/g, '')}_${date}`;
-              await setDoc(doc(db, 'attendance', id), {
-                id,
-                subject,
-                section,
-                date,
-                records,
-                lastUpdated: new Date()
-              });
-            }
-          }
-        }
-      } else {
-        const loadedAttendance: AttendanceRecord[] = [];
-        snapshot.forEach((doc) => {
-          loadedAttendance.push(doc.data() as AttendanceRecord);
-        });
-        setAttendance(loadedAttendance);
-      }
-    });
-    return () => unsubscribe();
-  }, []);
-
-  // Listen to grades from Firestore with seeder
-  useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, 'grades'), async (snapshot) => {
-      if (snapshot.empty) {
-        const students = DEFAULT_ACCOUNTS.filter(a => a.role === 'student');
-        
-        const mockScores: Record<string, Record<string, number>> = {
-          'alex@als.edu': {
-            'LS3 Mathematics - Problem Solving': 85,
-            'LS2 Science - Scientific Literacy': 90,
-            'LS1 English - Communication Skills': 88,
-            'LS4 Life and Career Skills': 92
-          },
-          'robert@als.edu': {
-            'LS3 Mathematics - Problem Solving': 58,
-            'LS2 Science - Scientific Literacy': 62
-          },
-          'juan@als.edu': {
-            'LS3 Mathematics - Problem Solving': 45,
-            'LS1 English - Communication Skills': 72,
-            'LS4 Life and Career Skills': 75
-          },
-          'maria@als.edu': {
-            'LS2 Science - Scientific Literacy': 95,
-            'LS1 English - Communication Skills': 98,
-            'LS4 Life and Career Skills': 94
-          },
-          'ana@als.edu': {
-            'LS3 Mathematics - Problem Solving': 82,
-            'LS2 Science - Scientific Literacy': 88
-          },
-          'cardo@als.edu': {
-            'LS3 Mathematics - Problem Solving': 72,
-            'LS4 Life and Career Skills': 80
-          },
-          'jose@als.edu': {
-            'LS2 Science - Scientific Literacy': 99,
-            'LS1 English - Communication Skills': 96
-          },
-          'andres@als.edu': {
-            'LS1 English - Communication Skills': 85,
-            'LS4 Life and Career Skills': 89
-          }
-        };
-
-        for (const s of students) {
-          const studentScores = mockScores[s.email];
-          if (!studentScores) continue;
-
-          for (const [subject, score] of Object.entries(studentScores)) {
-            const id = `${s.email.replace(/[@.]/g, '_')}_${subject.replace(/\s+/g, '')}`;
-            await setDoc(doc(db, 'grades', id), {
-              id,
-              studentEmail: s.email,
-              studentName: s.name,
-              subject,
-              section: s.section,
-              score
-            });
-          }
-        }
-      } else {
-        const loadedGrades: StudentGrade[] = [];
-        snapshot.forEach((doc) => {
-          loadedGrades.push(doc.data() as StudentGrade);
-        });
-        setGrades(loadedGrades);
-      }
-    });
-    return () => unsubscribe();
-  }, []);
-
   const [portal, setPortal] = useState<PortalType>(() => {
     const saved = localStorage.getItem('als_session');
     if (saved) {
@@ -227,6 +48,235 @@ export default function App() {
     }
     return 'student';
   });
+
+  // Fetch accounts from Firestore once on component mount
+  useEffect(() => {
+    const fetchAccounts = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'users'));
+        if (querySnapshot.empty) {
+          for (const acc of DEFAULT_ACCOUNTS) {
+            await setDoc(doc(db, 'users', acc.email.toLowerCase()), acc);
+          }
+          setAccounts(DEFAULT_ACCOUNTS);
+        } else {
+          const loadedAccounts: UserAccount[] = [];
+          querySnapshot.forEach((doc) => {
+            loadedAccounts.push(doc.data() as UserAccount);
+          });
+          setAccounts(loadedAccounts);
+        }
+      } catch (err) {
+        console.error("Error fetching accounts:", err);
+      }
+    };
+    fetchAccounts();
+  }, []);
+
+  // Fetch lessons from Firestore once on component mount
+  useEffect(() => {
+    const fetchLessons = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'lessons'));
+        if (querySnapshot.empty) {
+          for (const lesson of MOCK_LESSONS) {
+            await setDoc(doc(db, 'lessons', lesson.id), lesson);
+          }
+          setLessons(MOCK_LESSONS);
+        } else {
+          const loadedLessons: Lesson[] = [];
+          querySnapshot.forEach((doc) => {
+            loadedLessons.push(doc.data() as Lesson);
+          });
+          setLessons(loadedLessons);
+        }
+      } catch (err) {
+        console.error("Error fetching lessons:", err);
+      }
+    };
+    fetchLessons();
+  }, []);
+
+  // In-memory mock seeding utilities for attendance and grades
+  const generateMockAttendance = (): AttendanceRecord[] => {
+    const subjects = [
+      'LS1 English - Communication Skills',
+      'LS1 Filipino - Communication Skills',
+      'LS2 Science - Scientific Literacy',
+      'LS3 Mathematics - Problem Solving',
+      'LS4 Life and Career Skills',
+      'LS5 Understanding Culture and Society',
+      'LS6 Digital Literacy'
+    ];
+    const sections = ['Section A', 'Section B'];
+    const students = DEFAULT_ACCOUNTS.filter(a => a.role === 'student');
+    
+    // Generate last 10 school days (excluding weekends)
+    const dates: string[] = [];
+    let d = new Date();
+    while (dates.length < 10) {
+      d.setDate(d.getDate() - 1);
+      const day = d.getDay();
+      if (day !== 0 && day !== 6) { // Not Sat/Sun
+        dates.push(d.toISOString().split('T')[0]);
+      }
+    }
+
+    const mockAttendance: AttendanceRecord[] = [];
+
+    for (const date of dates) {
+      for (const subject of subjects) {
+        for (const section of sections) {
+          const secStudents = students.filter(s => s.section === section && s.subjects?.includes(subject));
+          if (secStudents.length === 0) continue;
+
+          const records: Record<string, 'present' | 'absent' | 'late'> = {};
+          secStudents.forEach(s => {
+            const rand = Math.random();
+            if (s.email === 'robert@als.edu') {
+              records[s.email] = rand < 0.55 ? 'present' : (rand < 0.90 ? 'absent' : 'late');
+            } else if (s.email === 'juan@als.edu') {
+              records[s.email] = rand < 0.60 ? 'present' : (rand < 0.92 ? 'absent' : 'late');
+            } else {
+              records[s.email] = rand < 0.85 ? 'present' : (rand < 0.95 ? 'late' : 'absent');
+            }
+          });
+
+          const id = `${subject.replace(/\s+/g, '')}_${section.replace(/\s+/g, '')}_${date}`;
+          mockAttendance.push({
+            id,
+            subject,
+            section,
+            date,
+            records,
+            lastUpdated: new Date()
+          });
+        }
+      }
+    }
+
+    return mockAttendance;
+  };
+
+  const generateMockGrades = (): StudentGrade[] => {
+    const students = DEFAULT_ACCOUNTS.filter(a => a.role === 'student');
+    
+    const mockScores: Record<string, Record<string, number>> = {
+      'alex@als.edu': {
+        'LS3 Mathematics - Problem Solving': 85,
+        'LS2 Science - Scientific Literacy': 90,
+        'LS1 English - Communication Skills': 88,
+        'LS4 Life and Career Skills': 92
+      },
+      'robert@als.edu': {
+        'LS3 Mathematics - Problem Solving': 58,
+        'LS2 Science - Scientific Literacy': 62
+      },
+      'juan@als.edu': {
+        'LS3 Mathematics - Problem Solving': 45,
+        'LS1 English - Communication Skills': 72,
+        'LS4 Life and Career Skills': 75
+      },
+      'maria@als.edu': {
+        'LS2 Science - Scientific Literacy': 95,
+        'LS1 English - Communication Skills': 98,
+        'LS4 Life and Career Skills': 94
+      },
+      'ana@als.edu': {
+        'LS3 Mathematics - Problem Solving': 82,
+        'LS2 Science - Scientific Literacy': 88
+      },
+      'cardo@als.edu': {
+        'LS3 Mathematics - Problem Solving': 72,
+        'LS4 Life and Career Skills': 80
+      },
+      'jose@als.edu': {
+        'LS2 Science - Scientific Literacy': 99,
+        'LS1 English - Communication Skills': 96
+      },
+      'andres@als.edu': {
+        'LS1 English - Communication Skills': 85,
+        'LS4 Life and Career Skills': 89
+      }
+    };
+
+    const mockGrades: StudentGrade[] = [];
+
+    for (const s of students) {
+      const studentScores = mockScores[s.email];
+      if (!studentScores) continue;
+
+      for (const [subject, score] of Object.entries(studentScores)) {
+        const id = `${s.email.replace(/[@.]/g, '_')}_${subject.replace(/\s+/g, '')}`;
+        mockGrades.push({
+          id,
+          studentEmail: s.email,
+          studentName: s.name,
+          subject,
+          section: s.section || 'Section A',
+          score
+        });
+      }
+    }
+
+    return mockGrades;
+  };
+
+  // Load attendance and grades only for teacher portal (one-time fetch + merge)
+  useEffect(() => {
+    if (portal !== 'teacher') {
+      return;
+    }
+
+    const loadTeacherData = async () => {
+      try {
+        const mockAttendance = generateMockAttendance();
+        const mockGrades = generateMockGrades();
+
+        // One-time fetch of attendance documents
+        const attendanceSnapshot = await getDocs(collection(db, 'attendance'));
+        const loadedAttendance: AttendanceRecord[] = [];
+        attendanceSnapshot.forEach((doc) => {
+          loadedAttendance.push(doc.data() as AttendanceRecord);
+        });
+
+        // Merge
+        const mergedAttendance = [...mockAttendance];
+        loadedAttendance.forEach(fetchedRecord => {
+          const index = mergedAttendance.findIndex(r => r.id === fetchedRecord.id);
+          if (index !== -1) {
+            mergedAttendance[index] = fetchedRecord;
+          } else {
+            mergedAttendance.push(fetchedRecord);
+          }
+        });
+        setAttendance(mergedAttendance);
+
+        // One-time fetch of grades documents
+        const gradesSnapshot = await getDocs(collection(db, 'grades'));
+        const loadedGrades: StudentGrade[] = [];
+        gradesSnapshot.forEach((doc) => {
+          loadedGrades.push(doc.data() as StudentGrade);
+        });
+
+        // Merge
+        const mergedGrades = [...mockGrades];
+        loadedGrades.forEach(fetchedGrade => {
+          const index = mergedGrades.findIndex(g => g.id === fetchedGrade.id);
+          if (index !== -1) {
+            mergedGrades[index] = fetchedGrade;
+          } else {
+            mergedGrades.push(fetchedGrade);
+          }
+        });
+        setGrades(mergedGrades);
+      } catch (err) {
+        console.error("Error loading teacher dashboard data:", err);
+      }
+    };
+
+    loadTeacherData();
+  }, [portal]);
 
   const [studentTab, setStudentTab] = useState<StudentTab>('home');
   const [coins, setCoins] = useState<number>(450);
@@ -265,18 +315,32 @@ export default function App() {
     setStudentTab('learning');
   };
 
-  // Firestore DB mutations
+  // Firestore DB mutations with manual local state updates
   const handleAddLesson = async (newLesson: Lesson) => {
     await setDoc(doc(db, 'lessons', newLesson.id), newLesson);
+    setLessons(prev => {
+      if (prev.some(l => l.id === newLesson.id)) {
+        return prev.map(l => l.id === newLesson.id ? newLesson : l);
+      }
+      return [...prev, newLesson];
+    });
   };
 
   const handleRemoveLesson = async (id: string) => {
     await deleteDoc(doc(db, 'lessons', id));
+    setLessons(prev => prev.filter(l => l.id !== id));
   };
 
   const handleAddAccount = async (newAcc: UserAccount) => {
     try {
       await setDoc(doc(db, 'users', newAcc.email.toLowerCase()), newAcc);
+      setAccounts(prev => {
+        const emailLower = newAcc.email.toLowerCase();
+        if (prev.some(acc => acc.email.toLowerCase() === emailLower)) {
+          return prev.map(acc => acc.email.toLowerCase() === emailLower ? newAcc : acc);
+        }
+        return [...prev, newAcc];
+      });
     } catch (err) {
       console.error('[ALS] Failed to add account to Firestore:', err);
       throw err;
@@ -287,6 +351,7 @@ export default function App() {
     try {
       // 1. Delete from Firestore
       await deleteDoc(doc(db, 'users', email.toLowerCase()));
+      setAccounts(prev => prev.filter(acc => acc.email.toLowerCase() !== email.toLowerCase()));
 
       // 2. Delete from Firebase Authentication via Admin API
       try {
@@ -314,6 +379,15 @@ export default function App() {
       console.error('[ALS] Failed to remove account from Firestore:', err);
       return false;
     }
+  };
+
+  const handleSaveAttendanceLocal = (newRecord: AttendanceRecord) => {
+    setAttendance(prev => {
+      if (prev.some(r => r.id === newRecord.id)) {
+        return prev.map(r => r.id === newRecord.id ? newRecord : r);
+      }
+      return [...prev, newRecord];
+    });
   };
 
   // If there's no active authenticated session, direct to the RBAC Login Gateway
@@ -539,6 +613,7 @@ export default function App() {
               attendance={attendance}
               grades={grades}
               currentUser={accounts.find(a => a.email.toLowerCase() === session.email.toLowerCase())}
+              onSaveAttendance={handleSaveAttendanceLocal}
             />
           )}
 

@@ -2,7 +2,7 @@
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { getAuth, GoogleAuthProvider } from "firebase/auth"; // Added Auth
-import { getFirestore } from "firebase/firestore"; // Added Firestore
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "firebase/firestore"; // Added persistent cache
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -22,4 +22,8 @@ const analytics = getAnalytics(app);
 // Initialize and export Auth and Firestore so other files can use them
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
-export const db = getFirestore(app);
+export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({
+    tabManager: persistentMultipleTabManager()
+  })
+});

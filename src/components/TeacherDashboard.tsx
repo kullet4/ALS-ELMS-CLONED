@@ -12,6 +12,7 @@ interface TeacherDashboardProps {
   attendance: AttendanceRecord[];
   grades: StudentGrade[];
   currentUser?: UserAccount;
+  onSaveAttendance?: (record: AttendanceRecord) => void;
 }
 
 interface BuilderSlideInput {
@@ -75,7 +76,8 @@ export default function TeacherDashboard({
   accounts,
   attendance,
   grades,
-  currentUser
+  currentUser,
+  onSaveAttendance
 }: TeacherDashboardProps) {
 
   const [notification, setNotification] = useState<string | null>(null);
@@ -329,15 +331,19 @@ export default function TeacherDashboard({
 
   const handleSaveAttendance = async () => {
     const id = `${filterSubject.replace(/\s+/g, '')}_${filterSection.replace(/\s+/g, '')}_${filterDate}`;
+    const newRecord: AttendanceRecord = {
+      id,
+      subject: filterSubject,
+      section: filterSection,
+      date: filterDate,
+      records: localRecords,
+      lastUpdated: new Date()
+    };
     try {
-      await setDoc(doc(db, 'attendance', id), {
-        id,
-        subject: filterSubject,
-        section: filterSection,
-        date: filterDate,
-        records: localRecords,
-        lastUpdated: new Date()
-      });
+      await setDoc(doc(db, 'attendance', id), newRecord);
+      if (onSaveAttendance) {
+        onSaveAttendance(newRecord);
+      }
       setNotification('Attendance checklist synchronized to database! 💾');
       setTimeout(() => setNotification(null), 4000);
     } catch (err) {
