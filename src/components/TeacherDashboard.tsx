@@ -134,6 +134,11 @@ export default function TeacherDashboard({
     return ['Section A', 'Section B'];
   }, [currentUser]);
 
+  // Keep filterSection in sync whenever the teacher's assigned sections change
+  React.useEffect(() => {
+    setFilterSection(prev => teacherSections.includes(prev) ? prev : teacherSections[0] || prev);
+  }, [teacherSections]);
+
   const [supSection, setSupSection] = useState<string>(teacherSections[0] || '');
 
   React.useEffect(() => {
@@ -585,8 +590,9 @@ export default function TeacherDashboard({
                 onChange={(e) => setFilterSection(e.target.value)}
                 className="w-full bg-white border border-slate-200 focus:border-[#526069] rounded-xl p-2.5 text-xs outline-none font-bold shadow-sm"
               >
-                <option value="Section A">Section A</option>
-                <option value="Section B">Section B</option>
+                {teacherSections.map(sec => (
+                  <option key={sec} value={sec}>{sec}</option>
+                ))}
               </select>
             </div>
             <div>
@@ -760,8 +766,9 @@ export default function TeacherDashboard({
                 <div>
                   <label className="text-[10px] font-black text-slate-550 uppercase block mb-1">Filter Section</label>
                   <select value={filterSection} onChange={(e) => setFilterSection(e.target.value)} className="w-full bg-white border border-slate-200 focus:border-[#526069] rounded-xl p-2.5 text-xs outline-none font-bold shadow-sm">
-                    <option value="Section A">Section A</option>
-                    <option value="Section B">Section B</option>
+                    {teacherSections.map(sec => (
+                      <option key={sec} value={sec}>{sec}</option>
+                    ))}
                   </select>
                 </div>
               </div>
