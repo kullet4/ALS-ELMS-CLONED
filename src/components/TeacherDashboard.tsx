@@ -99,7 +99,25 @@ export default function TeacherDashboard({
   const [creationMethod, setCreationMethod] = useState<'link' | 'interactive'>('link');
   const [supTitle, setSupTitle] = useState('');
   const [supCategory, setSupCategory] = useState<LessonCategory>(teacherSubjects[0]);
-  const [supLevel, setSupLevel] = useState(2);
+  
+  const teacherSections = React.useMemo(() => {
+    if (currentUser?.sections && currentUser.sections.length > 0) {
+      return currentUser.sections;
+    }
+    if (currentUser?.section) {
+      return [currentUser.section];
+    }
+    return ['Section A', 'Section B'];
+  }, [currentUser]);
+
+  const [supSection, setSupSection] = useState<string>(teacherSections[0] || '');
+
+  React.useEffect(() => {
+    if (teacherSections.length > 0) {
+      setSupSection(prev => teacherSections.includes(prev) ? prev : teacherSections[0]);
+    }
+  }, [teacherSections]);
+
   const [supDuration, setSupDuration] = useState('15 mins');
   const [supBucketUrl, setSupBucketUrl] = useState('');
   const [supDescription, setSupDescription] = useState('');
@@ -232,12 +250,13 @@ export default function TeacherDashboard({
         id: `tchr-${Date.now()}`,
         title: supTitle.trim(),
         category: supCategory,
-        level: supLevel,
+        level: 2,
         duration: supDuration,
         description: supDescription || lessonParts[0].content.substring(0, 100) + '...',
         progress: 0,
         assetUrl: ASSET_URLS[supCategory],
-        rewardText: `Textbook Complete: Level ${supLevel}`,
+        rewardText: `Textbook Complete: ${supSection}`,
+        sectionId: supSection,
         assignedTo: 'Student Alex',
         uploadedBy,
         parts: lessonParts,
@@ -253,12 +272,13 @@ export default function TeacherDashboard({
         id: `tchr-${Date.now()}`,
         title: supTitle.trim(),
         category: supCategory,
-        level: supLevel,
+        level: 2,
         duration: supDuration,
         description: supDescription || 'No description supplied.',
         progress: 0,
         assetUrl: ASSET_URLS[supCategory],
-        rewardText: `Supabase Bucket: Level ${supLevel}`,
+        rewardText: `Supabase Bucket: ${supSection}`,
+        sectionId: supSection,
         bucketUrl: supBucketUrl.trim(),
         assignedTo: 'Student Alex',
         uploadedBy
@@ -959,15 +979,20 @@ export default function TeacherDashboard({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Module Level</label>
+                    <label className="text-[11px] font-black text-slate-550 uppercase block mb-1">
+                      Target Section (Class)
+                      {!currentUser?.section && (!currentUser?.sections || currentUser.sections.length === 0) && (
+                        <span className="ml-1 text-amber-600 normal-case font-bold">(using demo fallback)</span>
+                      )}
+                    </label>
                     <select
-                      value={supLevel}
-                      onChange={(e) => setSupLevel(Number(e.target.value))}
+                      value={supSection}
+                      onChange={(e) => setSupSection(e.target.value)}
                       className="w-full bg-white border border-slate-200 focus:border-[#526069] rounded-xl p-3 text-xs outline-none font-bold transition-all shadow-sm"
                     >
-                      <option value="1">Level 1 (Elementary)</option>
-                      <option value="2">Level 2 (Secondary Lower)</option>
-                      <option value="3">Level 3 (Secondary Advanced)</option>
+                      {teacherSections.map(sec => (
+                        <option key={sec} value={sec}>{sec}</option>
+                      ))}
                     </select>
                   </div>
                   <div>
@@ -1165,6 +1190,9 @@ export default function TeacherDashboard({
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
                           <span className="inline-flex px-2 py-0.5 rounded-md text-[9px] font-black uppercase mb-1.5 bg-indigo-50 text-indigo-700">{l.category}</span>
+                          {l.sectionId && (
+                            <span className="ml-1.5 inline-flex px-2 py-0.5 rounded-md text-[9px] font-black uppercase mb-1.5 bg-emerald-50 text-emerald-700">{l.sectionId}</span>
+                          )}
                           <h5 className="font-black text-xs text-slate-800 leading-tight block truncate" title={l.title}>{l.title}</h5>
                         </div>
                         <button onClick={() => onRemoveLesson(l.id)} className="text-slate-400 hover:text-rose-600 p-1 rounded hover:bg-slate-200 transition-colors cursor-pointer shrink-0" title="Delete Lesson">

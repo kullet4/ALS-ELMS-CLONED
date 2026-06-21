@@ -39,13 +39,16 @@ export default function StudentLessons({ onTabChange, onSelectLesson, lessons, c
     if (l.id === 'learning-active') return false;
     if (l.assignedTo?.includes('Teachers')) return false;
 
+    // Check section assignment if specified
+    const sectionAllowed = !l.sectionId || l.sectionId === currentUser?.section;
+
     // Only show lessons that belong to enrolled subjects (if subjects are assigned)
     const subjectAllowed = enrolledSubjects.length === 0 || enrolledCategories.includes(l.category);
     const matchesCategory = selectedCategory ? l.category === selectedCategory : true;
     const matchesSearch = l.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           l.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           l.category.toLowerCase().includes(searchQuery.toLowerCase());
-    return subjectAllowed && matchesCategory && matchesSearch;
+    return sectionAllowed && subjectAllowed && matchesCategory && matchesSearch;
   });
 
   // Live lesson counts per category (among allowed lessons)
@@ -53,6 +56,7 @@ export default function StudentLessons({ onTabChange, onSelectLesson, lessons, c
     lessons.filter(l =>
       l.id !== 'learning-active' &&
       !l.assignedTo?.includes('Teachers') &&
+      (!l.sectionId || l.sectionId === currentUser?.section) &&
       l.category === cat &&
       (enrolledSubjects.length === 0 || enrolledCategories.includes(cat))
     ).length;

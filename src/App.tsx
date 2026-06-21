@@ -14,7 +14,7 @@ import { collection, onSnapshot, doc, setDoc, deleteDoc } from 'firebase/firesto
 
 export const DEFAULT_ACCOUNTS: UserAccount[] = [
   { email: 'alex@als.edu', role: 'student', name: 'Alex Johnson', label: 'Alex Johnson (Student)', desc: 'ALS Alternative Secondary Pathway', avatar: '🎓', password: 'password', section: 'Section A', subjects: ['LS3 Mathematics - Problem Solving', 'LS2 Science - Scientific Literacy', 'LS1 English - Communication Skills', 'LS4 Life and Career Skills'] },
-  { email: 'marcus@als.edu', role: 'teacher', name: 'Mentor Marcus', label: 'Mentor Marcus (Teacher)', desc: 'Regional Instructor (Region IV-A)', avatar: '🧑‍🏫', password: 'password' },
+  { email: 'marcus@als.edu', role: 'teacher', name: 'Mentor Marcus', label: 'Mentor Marcus (Teacher)', desc: 'Regional Instructor (Region IV-A)', avatar: '🧑‍🏫', password: 'password', section: 'Section A' },
   { email: 'superintendent@als.edu', role: 'admin', name: 'Administrator Superintendent', label: 'Superintendent (Admin)', desc: 'Regional Operations Director', avatar: '🏢', password: 'password' },
   { email: 'robert@als.edu', role: 'student', name: 'Robert Lim', label: 'Robert Lim (Student)', desc: 'ALS Alternative Secondary Pathway', avatar: '🎓', password: 'password', section: 'Section A', subjects: ['LS3 Mathematics - Problem Solving', 'LS2 Science - Scientific Literacy'] },
   { email: 'juan@als.edu', role: 'student', name: 'Juan Dela Cruz', label: 'Juan Dela Cruz (Student)', desc: 'ALS Alternative Secondary Pathway', avatar: '🎓', password: 'password', section: 'Section A', subjects: ['LS3 Mathematics - Problem Solving', 'LS1 English - Communication Skills', 'LS4 Life and Career Skills'] },

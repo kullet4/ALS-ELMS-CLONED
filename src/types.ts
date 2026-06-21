@@ -37,6 +37,7 @@ export interface Lesson {
   bucketUrl?: string; // Supabase/Firebase file storage URI
   assignedTo?: string; // Student name or group
   uploadedBy?: string; // Who added this lesson
+  sectionId?: string;  // Target section assigned to this lesson
   parts?: LessonPart[];
   quiz?: LessonQuiz;
   quizzes?: LessonQuiz[];
@@ -81,6 +82,7 @@ export interface UserAccount {
   avatar: string;
   password?: string;
   section?: string;
+  sections?: string[];
   gradeLevel?: number; // 1–6
   subjects?: string[];
 }

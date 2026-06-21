@@ -254,13 +254,17 @@ export default function AdminDashboard({
                 <>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Section</label>
+                      <label className="text-[11px] font-black text-slate-500 uppercase block mb-1">
+                        {newAccRole === 'teacher' ? 'Assigned Section' : 'Section'}
+                      </label>
                       <select
                         value={newAccSection}
                         onChange={(e) => setNewAccSection(e.target.value)}
                         className="w-full bg-white border border-slate-200 focus:border-[#526069] rounded-xl p-3 text-xs outline-none font-bold transition-all shadow-sm"
                       >
-                        <option value="">— Select Section —</option>
+                        <option value="">
+                          {newAccRole === 'teacher' ? '— Select Assigned Section —' : '— Select Section —'}
+                        </option>
                         <option value="Sampaguita">Sampaguita</option>
                         <option value="Narra">Narra</option>
                         <option value="Jasmine">Jasmine</option>
@@ -270,13 +274,17 @@ export default function AdminDashboard({
                       </select>
                     </div>
                     <div>
-                      <label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Grade Level</label>
+                      <label className="text-[11px] font-black text-slate-500 uppercase block mb-1">
+                        {newAccRole === 'teacher' ? 'Handled Grade Level' : 'Grade Level'}
+                      </label>
                       <select
                         value={newAccGrade}
                         onChange={(e) => setNewAccGrade(e.target.value === '' ? '' : Number(e.target.value))}
                         className="w-full bg-white border border-slate-200 focus:border-[#526069] rounded-xl p-3 text-xs outline-none font-bold transition-all shadow-sm"
                       >
-                        <option value="">— Select Grade —</option>
+                        <option value="">
+                          {newAccRole === 'teacher' ? '— Select Handled Grade —' : '— Select Grade —'}
+                        </option>
                         <option value="1">Grade 1</option>
                         <option value="2">Grade 2</option>
                         <option value="3">Grade 3</option>
@@ -288,7 +296,9 @@ export default function AdminDashboard({
                   </div>
 
                   <div>
-                    <label className="text-[11px] font-black text-slate-500 uppercase block mb-2">Subject Areas</label>
+                    <label className="text-[11px] font-black text-slate-500 uppercase block mb-2">
+                      {newAccRole === 'teacher' ? 'Authorized Strands to Instruct/Manage' : 'Enrolled Subject Areas'}
+                    </label>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {ALS_SUBJECTS.map((subj) => (
                         <button
@@ -313,7 +323,11 @@ export default function AdminDashboard({
                       ))}
                     </div>
                     {newAccSubjects.length === 0 && (
-                      <p className="text-[10px] text-slate-400 mt-1.5">Select one or more subject areas for this account.</p>
+                      <p className="text-[10px] text-slate-400 mt-1.5">
+                        {newAccRole === 'teacher'
+                          ? 'Select specific learning strands this teacher is authorized to instruct/manage.'
+                          : 'Select learning strands this student is enrolled in.'}
+                      </p>
                     )}
                   </div>
                 </>
@@ -376,19 +390,37 @@ export default function AdminDashboard({
                         {(acc.gradeLevel || acc.section || (acc.subjects && acc.subjects.length > 0)) && (
                           <div className="flex flex-wrap gap-1 mt-1.5">
                             {acc.gradeLevel && (
-                              <span className="bg-sky-50 text-sky-700 border border-sky-100 text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md">
-                                Grade {acc.gradeLevel}
-                              </span>
+                              acc.role === 'teacher' ? (
+                                <span className="bg-indigo-50 text-indigo-700 border border-indigo-100 text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md">
+                                  Handled Grade {acc.gradeLevel}
+                                </span>
+                              ) : (
+                                <span className="bg-sky-50 text-sky-700 border border-sky-100 text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md">
+                                  Grade {acc.gradeLevel}
+                                </span>
+                              )
                             )}
                             {acc.section && (
-                              <span className="bg-violet-50 text-violet-700 border border-violet-100 text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md">
-                                {acc.section}
-                              </span>
+                              acc.role === 'teacher' ? (
+                                <span className="bg-indigo-50 text-indigo-700 border border-indigo-100 text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md">
+                                  Assigned Section: {acc.section}
+                                </span>
+                              ) : (
+                                <span className="bg-violet-50 text-violet-700 border border-violet-100 text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md">
+                                  {acc.section}
+                                </span>
+                              )
                             )}
                             {acc.subjects?.map(s => (
-                              <span key={s} className="bg-amber-50 text-amber-700 border border-amber-100 text-[9px] font-bold px-1.5 py-0.5 rounded-md">
-                                {s}
-                              </span>
+                              acc.role === 'teacher' ? (
+                                <span key={s} className="bg-indigo-50 text-indigo-700 border border-indigo-100 text-[9px] font-bold px-1.5 py-0.5 rounded-md">
+                                  Authorized Strand: {s}
+                                </span>
+                              ) : (
+                                <span key={s} className="bg-amber-50 text-amber-700 border border-amber-100 text-[9px] font-bold px-1.5 py-0.5 rounded-md">
+                                  {s}
+                                </span>
+                              )
                             ))}
                           </div>
                         )}
