@@ -85,6 +85,10 @@ export interface UserAccount {
   sections?: string[];
   gradeLevel?: number; // 1–6
   subjects?: string[];
+  /** Instructor-only: multiple sections this teacher is assigned to handle */
+  assignedSections?: string[];
+  /** Instructor-only: multiple grade levels this teacher handles (stored as strings, e.g. "Grade 3") */
+  handledGradeLevels?: string[];
 }
 
 export interface AttendanceRecord {

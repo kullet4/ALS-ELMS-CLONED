@@ -24,9 +24,16 @@ export default function AdminDashboard({
   const [newAccPassword, setNewAccPassword] = useState('password');
   const [newAccRole, setNewAccRole] = useState<PortalType>('student');
   const [newAccDesc, setNewAccDesc] = useState('');
+  // Student-only single-select fields
   const [newAccSection, setNewAccSection] = useState('');
   const [newAccGrade, setNewAccGrade] = useState<number | ''>('');
+  // Teacher-only multi-select fields
+  const [assignedSections, setAssignedSections] = useState<string[]>([]);
+  const [handledGradeLevels, setHandledGradeLevels] = useState<string[]>([]);
   const [newAccSubjects, setNewAccSubjects] = useState<string[]>([]);
+
+  const ALS_SECTIONS = ['Sampaguita', 'Narra', 'Jasmine', 'Rizal', 'Agila', 'Mayon'];
+  const ALS_GRADE_LEVELS = ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6'];
 
   const ALS_SUBJECTS = [
     { value: 'LS1 English - Communication Skills', label: '🗣️ LS1 English - Communication Skills' },
@@ -37,6 +44,11 @@ export default function AdminDashboard({
     { value: 'LS5 Understanding Culture and Society', label: '🌏 LS5 Understanding Culture and Society' },
     { value: 'LS6 Digital Literacy', label: '💻 LS6 Digital Literacy' },
   ];
+
+  /** Generic toggle helper for string[] multi-select states */
+  const toggleInArray = (setter: React.Dispatch<React.SetStateAction<string[]>>, value: string) => {
+    setter(prev => prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]);
+  };
 
   const toggleSubject = (value: string) => {
     setNewAccSubjects(prev =>
@@ -76,8 +88,16 @@ export default function AdminDashboard({
       desc: newAccDesc.trim() || defaultDescs[newAccRole],
       avatar: defaultAvatars[newAccRole],
       password: newAccPassword || 'password',
-      ...(newAccSection.trim() && { section: newAccSection.trim() }),
-      ...(newAccGrade !== '' && { gradeLevel: Number(newAccGrade) }),
+      // Student-specific single-select fields
+      ...(newAccRole === 'student' && newAccSection.trim() && { section: newAccSection.trim() }),
+      ...(newAccRole === 'student' && newAccGrade !== '' && { gradeLevel: Number(newAccGrade) }),
+      // Teacher-specific multi-select fields
+      ...(newAccRole === 'teacher' && assignedSections.length > 0 && {
+        assignedSections,
+        sections: assignedSections, // alias for TeacherDashboard compatibility
+      }),
+      ...(newAccRole === 'teacher' && handledGradeLevels.length > 0 && { handledGradeLevels }),
+      // Shared subjects (both roles)
       ...(newAccSubjects.length > 0 && { subjects: newAccSubjects }),
     };
 
@@ -88,6 +108,8 @@ export default function AdminDashboard({
     setNewAccDesc('');
     setNewAccSection('');
     setNewAccGrade('');
+    setAssignedSections([]);
+    setHandledGradeLevels([]);
     setNewAccSubjects([]);
 
     setNotification(`Successfully registered new ${newAccRole} account for ${newAccount.name}! 🔐`);
@@ -252,48 +274,116 @@ export default function AdminDashboard({
               {/* Section, Grade Level & Subjects — shown for student & teacher */}
               {(newAccRole === 'student' || newAccRole === 'teacher') && (
                 <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-[11px] font-black text-slate-500 uppercase block mb-1">
-                        {newAccRole === 'teacher' ? 'Assigned Section' : 'Section'}
-                      </label>
-                      <select
-                        value={newAccSection}
-                        onChange={(e) => setNewAccSection(e.target.value)}
-                        className="w-full bg-white border border-slate-200 focus:border-[#526069] rounded-xl p-3 text-xs outline-none font-bold transition-all shadow-sm"
-                      >
-                        <option value="">
-                          {newAccRole === 'teacher' ? '— Select Assigned Section —' : '— Select Section —'}
-                        </option>
-                        <option value="Sampaguita">Sampaguita</option>
-                        <option value="Narra">Narra</option>
-                        <option value="Jasmine">Jasmine</option>
-                        <option value="Rizal">Rizal</option>
-                        <option value="Agila">Agila</option>
-                        <option value="Mayon">Mayon</option>
-                      </select>
+                  {/* ── STUDENT: single-select dropdowns ── */}
+                  {newAccRole === 'student' && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Section</label>
+                        <select
+                          value={newAccSection}
+                          onChange={(e) => setNewAccSection(e.target.value)}
+                          className="w-full bg-white border border-slate-200 focus:border-[#526069] rounded-xl p-3 text-xs outline-none font-bold transition-all shadow-sm"
+                        >
+                          <option value="">— Select Section —</option>
+                          {ALS_SECTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-black text-slate-500 uppercase block mb-1">Grade Level</label>
+                        <select
+                          value={newAccGrade}
+                          onChange={(e) => setNewAccGrade(e.target.value === '' ? '' : Number(e.target.value))}
+                          className="w-full bg-white border border-slate-200 focus:border-[#526069] rounded-xl p-3 text-xs outline-none font-bold transition-all shadow-sm"
+                        >
+                          <option value="">— Select Grade —</option>
+                          {ALS_GRADE_LEVELS.map((g, i) => <option key={g} value={i + 1}>{g}</option>)}
+                        </select>
+                      </div>
                     </div>
-                    <div>
-                      <label className="text-[11px] font-black text-slate-500 uppercase block mb-1">
-                        {newAccRole === 'teacher' ? 'Handled Grade Level' : 'Grade Level'}
-                      </label>
-                      <select
-                        value={newAccGrade}
-                        onChange={(e) => setNewAccGrade(e.target.value === '' ? '' : Number(e.target.value))}
-                        className="w-full bg-white border border-slate-200 focus:border-[#526069] rounded-xl p-3 text-xs outline-none font-bold transition-all shadow-sm"
-                      >
-                        <option value="">
-                          {newAccRole === 'teacher' ? '— Select Handled Grade —' : '— Select Grade —'}
-                        </option>
-                        <option value="1">Grade 1</option>
-                        <option value="2">Grade 2</option>
-                        <option value="3">Grade 3</option>
-                        <option value="4">Grade 4</option>
-                        <option value="5">Grade 5</option>
-                        <option value="6">Grade 6</option>
-                      </select>
+                  )}
+
+                  {/* ── TEACHER: multi-select checkbox grids ── */}
+                  {newAccRole === 'teacher' && (
+                    <div className="space-y-4">
+                      {/* Assigned Sections */}
+                      <div>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label className="text-[11px] font-black text-slate-500 uppercase">Assigned Sections</label>
+                          {assignedSections.length > 0 && (
+                            <span className="text-[9px] font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">
+                              {assignedSections.length} selected
+                            </span>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                          {ALS_SECTIONS.map(sec => {
+                            const isChecked = assignedSections.includes(sec);
+                            return (
+                              <button
+                                key={sec}
+                                type="button"
+                                onClick={() => toggleInArray(setAssignedSections, sec)}
+                                className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-[11px] font-bold transition-all cursor-pointer text-left ${
+                                  isChecked
+                                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                                    : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300 hover:bg-indigo-50'
+                                }`}
+                              >
+                                <span className={`w-3.5 h-3.5 rounded border-2 flex items-center justify-center shrink-0 ${
+                                  isChecked ? 'bg-white border-white' : 'border-slate-300'
+                                }`}>
+                                  {isChecked && <span className="text-indigo-600 text-[9px] font-black leading-none">✓</span>}
+                                </span>
+                                {sec}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        {assignedSections.length === 0 && (
+                          <p className="text-[10px] text-slate-400 mt-1.5">Select one or more sections this instructor will handle.</p>
+                        )}
+                      </div>
+
+                      {/* Handled Grade Levels */}
+                      <div>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label className="text-[11px] font-black text-slate-500 uppercase">Handled Grade Levels</label>
+                          {handledGradeLevels.length > 0 && (
+                            <span className="text-[9px] font-black text-violet-600 bg-violet-50 px-2 py-0.5 rounded-full">
+                              {handledGradeLevels.length} selected
+                            </span>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                          {ALS_GRADE_LEVELS.map(grade => {
+                            const isChecked = handledGradeLevels.includes(grade);
+                            return (
+                              <button
+                                key={grade}
+                                type="button"
+                                onClick={() => toggleInArray(setHandledGradeLevels, grade)}
+                                className={`flex flex-col items-center justify-center gap-1 px-2 py-2.5 rounded-xl border text-[10px] font-black transition-all cursor-pointer ${
+                                  isChecked
+                                    ? 'bg-violet-600 text-white border-violet-600 shadow-sm'
+                                    : 'bg-white text-slate-600 border-slate-200 hover:border-violet-300 hover:bg-violet-50'
+                                }`}
+                              >
+                                <span className={`w-3.5 h-3.5 rounded border-2 flex items-center justify-center shrink-0 ${
+                                  isChecked ? 'bg-white border-white' : 'border-slate-300'
+                                }`}>
+                                  {isChecked && <span className="text-violet-600 text-[9px] font-black leading-none">✓</span>}
+                                </span>
+                                <span className="leading-tight text-center">{grade.replace('Grade ', 'Gr.')}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                        {handledGradeLevels.length === 0 && (
+                          <p className="text-[10px] text-slate-400 mt-1.5">Select one or more grade levels this instructor covers.</p>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   <div>
                     <label className="text-[11px] font-black text-slate-500 uppercase block mb-2">
@@ -387,34 +477,39 @@ export default function AdminDashboard({
                           {acc.desc}
                         </span>
                         {/* Grade, Section & Subject badges */}
-                        {(acc.gradeLevel || acc.section || (acc.subjects && acc.subjects.length > 0)) && (
+                        {(acc.gradeLevel || acc.section ||
+                          (acc.assignedSections && acc.assignedSections.length > 0) ||
+                          (acc.handledGradeLevels && acc.handledGradeLevels.length > 0) ||
+                          (acc.subjects && acc.subjects.length > 0)) && (
                           <div className="flex flex-wrap gap-1 mt-1.5">
-                            {acc.gradeLevel && (
-                              acc.role === 'teacher' ? (
-                                <span className="bg-indigo-50 text-indigo-700 border border-indigo-100 text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md">
-                                  Handled Grade {acc.gradeLevel}
-                                </span>
-                              ) : (
-                                <span className="bg-sky-50 text-sky-700 border border-sky-100 text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md">
-                                  Grade {acc.gradeLevel}
-                                </span>
-                              )
+                            {/* Student single-select grade/section */}
+                            {acc.role !== 'teacher' && acc.gradeLevel && (
+                              <span className="bg-sky-50 text-sky-700 border border-sky-100 text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md">
+                                Grade {acc.gradeLevel}
+                              </span>
                             )}
-                            {acc.section && (
-                              acc.role === 'teacher' ? (
-                                <span className="bg-indigo-50 text-indigo-700 border border-indigo-100 text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md">
-                                  Assigned Section: {acc.section}
-                                </span>
-                              ) : (
-                                <span className="bg-violet-50 text-violet-700 border border-violet-100 text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md">
-                                  {acc.section}
-                                </span>
-                              )
+                            {acc.role !== 'teacher' && acc.section && (
+                              <span className="bg-violet-50 text-violet-700 border border-violet-100 text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md">
+                                {acc.section}
+                              </span>
                             )}
+                            {/* Teacher multi-select assigned sections */}
+                            {acc.role === 'teacher' && (acc.assignedSections ?? (acc.section ? [acc.section] : []))?.map(sec => (
+                              <span key={sec} className="bg-indigo-50 text-indigo-700 border border-indigo-100 text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md">
+                                📋 {sec}
+                              </span>
+                            ))}
+                            {/* Teacher multi-select handled grade levels */}
+                            {acc.role === 'teacher' && (acc.handledGradeLevels ?? (acc.gradeLevel ? [`Grade ${acc.gradeLevel}`] : []))?.map(gl => (
+                              <span key={gl} className="bg-violet-50 text-violet-700 border border-violet-100 text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md">
+                                🎓 {gl}
+                              </span>
+                            ))}
+                            {/* Subjects / strands (both roles) */}
                             {acc.subjects?.map(s => (
                               acc.role === 'teacher' ? (
                                 <span key={s} className="bg-indigo-50 text-indigo-700 border border-indigo-100 text-[9px] font-bold px-1.5 py-0.5 rounded-md">
-                                  Authorized Strand: {s}
+                                  Authorized: {s}
                                 </span>
                               ) : (
                                 <span key={s} className="bg-amber-50 text-amber-700 border border-amber-100 text-[9px] font-bold px-1.5 py-0.5 rounded-md">
