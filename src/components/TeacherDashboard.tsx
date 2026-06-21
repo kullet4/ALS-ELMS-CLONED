@@ -35,21 +35,40 @@ interface BuilderQuizInput {
   explanation: string;
 }
 
-const ALL_ALS_SUBJECTS = ['Science', 'Math', 'English', 'Life Skills'] as const;
+const ALL_ALS_SUBJECTS = [
+  'LS1 English - Communication Skills',
+  'LS1 Filipino - Communication Skills',
+  'LS2 Science - Scientific Literacy',
+  'LS3 Mathematics - Problem Solving',
+  'LS4 Life and Career Skills',
+  'LS5 Understanding Culture and Society',
+  'LS6 Digital Literacy',
+] as const;
 
-type LessonCategory = 'Math' | 'Science' | 'English' | 'Life Skills';
+type LessonCategory =
+  | 'LS1 English - Communication Skills'
+  | 'LS1 Filipino - Communication Skills'
+  | 'LS2 Science - Scientific Literacy'
+  | 'LS3 Mathematics - Problem Solving'
+  | 'LS4 Life and Career Skills'
+  | 'LS5 Understanding Culture and Society'
+  | 'LS6 Digital Literacy';
 
 const isSubjectMatch = (recordSubject: string | undefined, filterSubject: string): boolean => {
   if (!recordSubject) return false;
   if (recordSubject === filterSubject) return true;
-  
+
+  // Support old short-name subjects stored in Firestore before migration
   const legacyMap: Record<string, string[]> = {
-    'LS3 Mathematics - Problem Solving': ['Mathematics', 'Math'],
-    'LS2 Science - Scientific Literacy': ['Science'],
-    'LS1 English - Communication Skills': ['English'],
-    'LS4 Life and Career Skills': ['Life Skills']
+    'LS1 English - Communication Skills': ['English', 'LS1 English'],
+    'LS1 Filipino - Communication Skills': ['Filipino', 'LS1 Filipino'],
+    'LS2 Science - Scientific Literacy': ['Science', 'LS2 Science'],
+    'LS3 Mathematics - Problem Solving': ['Mathematics', 'Math', 'LS3 Mathematics'],
+    'LS4 Life and Career Skills': ['Life Skills', 'LS4 Life Skills'],
+    'LS5 Understanding Culture and Society': ['Culture', 'Society', 'LS5'],
+    'LS6 Digital Literacy': ['Digital Literacy', 'LS6'],
   };
-  
+
   const fallbacks = legacyMap[filterSubject];
   if (fallbacks && fallbacks.includes(recordSubject)) {
     return true;
@@ -63,10 +82,13 @@ const isStudentEnrolledInSubject = (studentSubjects: string[] | undefined, filte
 };
 
 const ASSET_URLS: Record<LessonCategory, string> = {
-  Math: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDMG5BPSp6RF1_qWoB091w0NCI-dfBgRJ48uICFHwNMdJF7HvO-oLb6he03CyyHUZgbhbLYo-CVTS58lgV4TvcpLeqPE0Krh7CEfrt6LXJJqjuYPQPmbSi_jZkRh8AvDwa1zQk0NZYFmJW8HxX4SxWK5txhS4Inqn3H_eT8MIxxVzAew3iCB7tqD9d1G_otijNVkoVpcUnptR2BQoChQYHchioHEPzHQoejGGyAWAQCMRTNWVPHrPG52QTxGZGu3KWipkTE8pA-KRE',
-  Science: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAJyvH30uHe26QqhBfpDQuAHjwoyAs1BdvCupuu9Snf3yjhNLq2y3vT35OvoYoFyCU5aVXhCmVGSJ8rmHepnIAcFRkcXOURqyxc0ItCZRWS31xbLTwTRR4amXaHdh1l0mu6m_rNmI21EZ5SX11eafxQ4x9j79WVXaRBhtHf2amoGNcuw0r0EIL90HGJhzCzyC7ivJcYUHSVVgBlUmxEgECDMXhocbOjuErgQdmoJhW0mOVBc0xDGyEODHmMnUoPM_bjUaJzOvuTrqw',
-  English: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDE-BXqQ6EFQrGv_0bveAFQxNdS7gHxRL7lylGFTiHeFky1sDUWHx0mb6Z9IpFzxuGDSveJ2x4eLQBwBg3ch-P_K18lhkMyIBxNXlp3I_3pb-n8ZPAkh_XWALD4UsgPS35R1RT10wyhjc9yViAD5lI_9JwPyRTtupqqNFJfsxJ1ayFfOnZDNLJplGBJup0DgUbtXIcwjhBtoFewNEG5vLlUjcgO40xuTbvlWZMXbQcZrAHUkOmNm-HHFzWzeHNTrNyu1ni54fAfbzI',
-  'Life Skills': 'https://lh3.googleusercontent.com/aida-public/AB6AXuD8Ihbn1lS_HTUSu-zs16FbWWUuduAHmNw9n8gduDhzNFkUWtQA3cKPDILlwaImvQFiobuGr92qXQoSdAEIeS5Ve3KpljYn7ZCHdl0ICIEoSGSg-yVtHs7AX9f7xw-cpuGTIydGuDURzJUbLFMyJ74tvRK3GReLLbMcRCckUdlcggoeheOmEvarwotbxEq2G-JRjcy_Btc2_KFovY1Drp6ot6x4VdBy8mKeLc0s0IIjYdx74lQkjFpAI5sms9oGh4lwABE0wjWMJx0',
+  'LS1 English - Communication Skills': 'https://lh3.googleusercontent.com/aida-public/AB6AXuDE-BXqQ6EFQrGv_0bveAFQxNdS7gHxRL7lylGFTiHeFky1sDUWHx0mb6Z9IpFzxuGDSveJ2x4eLQBwBg3ch-P_K18lhkMyIBxNXlp3I_3pb-n8ZPAkh_XWALD4UsgPS35R1RT10wyhjc9yViAD5lI_9JwPyRTtupqqNFJfsxJ1ayFfOnZDNLJplGBJup0DgUbtXIcwjhBtoFewNEG5vLlUjcgO40xuTbvlWZMXbQcZrAHUkOmNm-HHFzWzeHNTrNyu1ni54fAfbzI',
+  'LS1 Filipino - Communication Skills': 'https://lh3.googleusercontent.com/aida-public/AB6AXuDE-BXqQ6EFQrGv_0bveAFQxNdS7gHxRL7lylGFTiHeFky1sDUWHx0mb6Z9IpFzxuGDSveJ2x4eLQBwBg3ch-P_K18lhkMyIBxNXlp3I_3pb-n8ZPAkh_XWALD4UsgPS35R1RT10wyhjc9yViAD5lI_9JwPyRTtupqqNFJfsxJ1ayFfOnZDNLJplGBJup0DgUbtXIcwjhBtoFewNEG5vLlUjcgO40xuTbvlWZMXbQcZrAHUkOmNm-HHFzWzeHNTrNyu1ni54fAfbzI',
+  'LS2 Science - Scientific Literacy': 'https://lh3.googleusercontent.com/aida-public/AB6AXuAJyvH30uHe26QqhBfpDQuAHjwoyAs1BdvCupuu9Snf3yjhNLq2y3vT35OvoYoFyCU5aVXhCmVGSJ8rmHepnIAcFRkcXOURqyxc0ItCZRWS31xbLTwTRR4amXaHdh1l0mu6m_rNmI21EZ5SX11eafxQ4x9j79WVXaRBhtHf2amoGNcuw0r0EIL90HGJhzCzyC7ivJcYUHSVVgBlUmxEgECDMXhocbOjuErgQdmoJhW0mOVBc0xDGyEODHmMnUoPM_bjUaJzOvuTrqw',
+  'LS3 Mathematics - Problem Solving': 'https://lh3.googleusercontent.com/aida-public/AB6AXuDMG5BPSp6RF1_qWoB091w0NCI-dfBgRJ48uICFHwNMdJF7HvO-oLb6he03CyyHUZgbhbLYo-CVTS58lgV4TvcpLeqPE0Krh7CEfrt6LXJJqjuYPQPmbSi_jZkRh8AvDwa1zQk0NZYFmJW8HxX4SxWK5txhS4Inqn3H_eT8MIxxVzAew3iCB7tqD9d1G_otijNVkoVpcUnptR2BQoChQYHchioHEPzHQoejGGyAWAQCMRTNWVPHrPG52QTxGZGu3KWipkTE8pA-KRE',
+  'LS4 Life and Career Skills': 'https://lh3.googleusercontent.com/aida-public/AB6AXuD8Ihbn1lS_HTUSu-zs16FbWWUuduAHmNw9n8gduDhzNFkUWtQA3cKPDILlwaImvQFiobuGr92qXQoSdAEIeS5Ve3KpljYn7ZCHdl0ICIEoSGSg-yVtHy8AX9f7xw-cpuGTIydGuDURzJUbLFMyJ74tvRK3GReLLbMcRCckUdlcggoeheOmEvarwotbxEq2G-JRjcy_Btc2_KFovY1Drp6ot6x4VdBy8mKeLc0s0IIjYdx74lQkjFpAI5sms9oGh4lwABE0wjWMJx0',
+  'LS5 Understanding Culture and Society': 'https://lh3.googleusercontent.com/aida-public/AB6AXuAJyvH30uHe26QqhBfpDQuAHjwoyAs1BdvCupuu9Snf3yjhNLq2y3vT35OvoYoFyCU5aVXhCmVGSJ8rmHepnIAcFRkcXOURqyxc0ItCZRWS31xbLTwTRR4amXaHdh1l0mu6m_rNmI21EZ5SX11eafxQ4x9j79WVXaRBhtHf2amoGNcuw0r0EIL90HGJhzCzyC7ivJcYUHSVVgBlUmxEgECDMXhocbOjuErgQdmoJhW0mOVBc0xDGyEODHmMnUoPM_bjUaJzOvuTrqw',
+  'LS6 Digital Literacy': 'https://lh3.googleusercontent.com/aida-public/AB6AXuDE-BXqQ6EFQrGv_0bveAFQxNdS7gHxRL7lylGFTiHeFky1sDUWHx0mb6Z9IpFzxuGDSveJ2x4eLQBwBg3ch-P_K18lhkMyIBxNXlp3I_3pb-n8ZPAkh_XWALD4UsgPS35R1RT10wyhjc9yViAD5lI_9JwPyRTtupqqNFJfsxJ1ayFfOnZDNLJplGBJup0DgUbtXIcwjhBtoFewNEG5vLlUjcgO40xuTbvlWZMXbQcZrAHUkOmNm-HHFzWzeHNTrNyu1ni54fAfbzI',
 };
 
 export default function TeacherDashboard({ 
@@ -973,10 +995,14 @@ export default function TeacherDashboard({
                     >
                       {teacherSubjects.map(subject => (
                         <option key={subject} value={subject}>
-                          {subject === 'Science' ? '🧪 Science & Ecosystems' :
-                           subject === 'Math' ? '🔢 Mathematics (ALS Path)' :
-                           subject === 'English' ? '🗣️ English Communication' :
-                           '🛠️ Life Skills & Civics'}
+                          {subject === 'LS1 English - Communication Skills' ? '🗣️ LS1 English – Communication Skills' :
+                           subject === 'LS1 Filipino - Communication Skills' ? '📖 LS1 Filipino – Communication Skills' :
+                           subject === 'LS2 Science - Scientific Literacy' ? '🧪 LS2 Science – Scientific Literacy' :
+                           subject === 'LS3 Mathematics - Problem Solving' ? '🔢 LS3 Mathematics – Problem Solving' :
+                           subject === 'LS4 Life and Career Skills' ? '🛠️ LS4 Life and Career Skills' :
+                           subject === 'LS5 Understanding Culture and Society' ? '🌏 LS5 Understanding Culture & Society' :
+                           subject === 'LS6 Digital Literacy' ? '💻 LS6 Digital Literacy' :
+                           subject}
                         </option>
                       ))}
                     </select>
