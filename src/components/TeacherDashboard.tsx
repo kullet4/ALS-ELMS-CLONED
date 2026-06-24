@@ -254,12 +254,16 @@ export default function TeacherDashboard({
         return;
       }
 
-      const lessonParts = builderSlides.map((slide, idx) => ({
-        title: slide.title.trim(),
-        content: slide.content.trim(),
-        imageUrl: slide.imageUrl.trim() || undefined,
-        icon: idx === 0 ? 'auto_stories' : idx % 2 === 1 ? 'school' : 'psychology'
-      }));
+      const lessonParts = builderSlides.map((slide, idx) => {
+        const part: { title: string; content: string; icon: string; imageUrl?: string } = {
+          title: slide.title.trim(),
+          content: slide.content.trim(),
+          icon: idx === 0 ? 'auto_stories' : idx % 2 === 1 ? 'school' : 'psychology'
+        };
+        const trimmedImageUrl = slide.imageUrl.trim();
+        if (trimmedImageUrl) part.imageUrl = trimmedImageUrl;
+        return part;
+      });
 
       const lessonQuizzes = builderQuizzes.map(q => {
         const optionList: string[] = [];

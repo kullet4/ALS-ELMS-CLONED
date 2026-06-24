@@ -57,7 +57,7 @@ export default function ActiveClassroom({ lesson, onAddCoins, onClose }: ActiveC
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
 
   const isSupabase = !!lesson.bucketUrl;
-  const hasCustomParts = !!lesson.parts && lesson.uploadedBy === 'Admin Superintendent';
+  const hasCustomParts = !!lesson.parts && lesson.parts.length > 0;
 
   interface DisplayPart {
     id: number;
