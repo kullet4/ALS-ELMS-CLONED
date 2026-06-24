@@ -139,11 +139,13 @@ export default function TeacherDashboard({
     setFilterSection(prev => teacherSections.includes(prev) ? prev : teacherSections[0] || prev);
   }, [teacherSections]);
 
-  const [supSection, setSupSection] = useState<string>(teacherSections[0] || '');
+  const [supSection, setSupSection] = useState<string>('');
 
   React.useEffect(() => {
+    // Only auto-correct if supSection is a stale specific section that's no longer in teacherSections.
+    // '' means 'All Sections' and is always valid — never override it.
     if (teacherSections.length > 0) {
-      setSupSection(prev => teacherSections.includes(prev) ? prev : teacherSections[0]);
+      setSupSection(prev => prev === '' || teacherSections.includes(prev) ? prev : teacherSections[0]);
     }
   }, [teacherSections]);
 
@@ -288,9 +290,9 @@ export default function TeacherDashboard({
         description: supDescription || lessonParts[0].content.substring(0, 100) + '...',
         progress: 0,
         assetUrl: ASSET_URLS[supCategory],
-        rewardText: `Textbook Complete: ${supSection}`,
-        sectionId: supSection,
-        assignedTo: 'Student Alex',
+        rewardText: supSection ? `Textbook Complete: ${supSection}` : 'Textbook Complete',
+        sectionId: supSection || undefined,
+        assignedTo: supSection ? `Section: ${supSection}` : 'All Students',
         uploadedBy,
         parts: lessonParts,
         quiz: lessonQuizzes[0],
@@ -310,10 +312,10 @@ export default function TeacherDashboard({
         description: supDescription || 'No description supplied.',
         progress: 0,
         assetUrl: ASSET_URLS[supCategory],
-        rewardText: `Supabase Bucket: ${supSection}`,
-        sectionId: supSection,
+        rewardText: supSection ? `Supabase Bucket: ${supSection}` : 'Lesson Module',
+        sectionId: supSection || undefined,
+        assignedTo: supSection ? `Section: ${supSection}` : 'All Students',
         bucketUrl: supBucketUrl.trim(),
-        assignedTo: 'Student Alex',
         uploadedBy
       };
     }
@@ -1033,6 +1035,7 @@ export default function TeacherDashboard({
                       onChange={(e) => setSupSection(e.target.value)}
                       className="w-full bg-white border border-slate-200 focus:border-[#526069] rounded-xl p-3 text-xs outline-none font-bold transition-all shadow-sm"
                     >
+                      <option value="">🌐 All Sections (Everyone)</option>
                       {teacherSections.map(sec => (
                         <option key={sec} value={sec}>{sec}</option>
                       ))}
