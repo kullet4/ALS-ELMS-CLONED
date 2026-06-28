@@ -89,24 +89,6 @@ export default function StudentLessons({ onTabChange, onSelectLesson, lessons, c
   // Build enrolled subjects set (empty = all allowed)
   const enrolledSubjects: string[] = currentUser?.subjects ?? [];
 
-  // Map subject names from UserAccount format to Lesson category format
-  const subjectCategoryMap: Record<string, string> = {
-    // Full LS names from admin assignment
-    'LS1 English - Communication Skills': 'LS1 English',
-    'LS1 Filipino - Communication Skills': 'LS1 Filipino',
-    'LS2 Science - Scientific Literacy': 'LS2 Science',
-    'LS3 Mathematics - Problem Solving': 'LS3 Mathematics',
-    'LS4 Life and Career Skills': 'LS4 Life Skills',
-    'LS5 Understanding Culture and Society': 'LS5 Culture & Society',
-    'LS6 Digital Literacy': 'LS6 Digital Literacy',
-    // Short aliases (backward compat)
-    'Mathematics': 'LS3 Mathematics',
-    'Math': 'LS3 Mathematics',
-    'Science': 'LS2 Science',
-    'English': 'LS1 English',
-    'Filipino': 'LS1 Filipino',
-    'Life Skills': 'LS4 Life Skills',
-  };
   // Check section alignment based on teacher-student relationship and sectionId target
   const isLessonSectionAllowed = (l: Lesson) => {
     if (l.uploadedByEmail) {
@@ -133,20 +115,24 @@ export default function StudentLessons({ onTabChange, onSelectLesson, lessons, c
     return !l.sectionId || l.sectionId === currentUser?.section;
   };
 
-  // Get unique categories from active lessons that this student is allowed to see
+  // Legacy subject names that no longer apply — filter them out everywhere
+  const isLsCategory = (cat: string) => /^LS\d+/i.test(cat.trim());
+
+  // Get categories from available lessons that the student is allowed to see
   const lessonCategories = lessons
     .filter(l => l.id !== 'learning-active' && !l.assignedTo?.includes('Teachers') && isLessonSectionAllowed(l))
-    .map(l => subjectCategoryMap[l.category] ?? l.category);
-
-  // Get categories from the student's enrolled subjects
-  const userCategories = enrolledSubjects.map(s => subjectCategoryMap[s] ?? s);
-
-  // Combine them to get the complete list of unique categories, sorted alphabetically
-  const uniqueCategories = [...new Set([...lessonCategories, ...userCategories])].filter(Boolean).sort();
+    .map(l => l.category)
+    .filter(isLsCategory);
 
   const enrolledCategories = enrolledSubjects.length > 0
-    ? [...new Set(enrolledSubjects.map(s => subjectCategoryMap[s] ?? s))]
-    : uniqueCategories;
+    ? [...new Set(enrolledSubjects.filter(isLsCategory))]
+    : [...new Set(lessonCategories)];
+
+  // Always show all enrolled subject tiles (even if 0 lessons), plus any lesson categories not in enrolled list
+  // Only LS-format subjects are shown — legacy bare names (Math, Science, English, Life Skills) are excluded
+  const uniqueCategories = [...new Set([...enrolledCategories, ...lessonCategories])]
+    .filter(Boolean)
+    .sort();
 
   // Filter lessons based on category selection, search query, and enrolled subjects
   const filteredLessons = lessons.filter(l => {
@@ -156,12 +142,11 @@ export default function StudentLessons({ onTabChange, onSelectLesson, lessons, c
     const sectionAllowed = isLessonSectionAllowed(l);
 
     // Only show lessons that belong to enrolled subjects (if subjects are assigned)
-    const lessonCategoryMapped = subjectCategoryMap[l.category] ?? l.category;
-    const subjectAllowed = enrolledSubjects.length === 0 || enrolledCategories.includes(lessonCategoryMapped);
-    const matchesCategory = selectedCategory ? lessonCategoryMapped === selectedCategory : true;
+    const subjectAllowed = enrolledSubjects.length === 0 || enrolledCategories.includes(l.category);
+    const matchesCategory = selectedCategory ? l.category === selectedCategory : true;
     const matchesSearch = l.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           l.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          lessonCategoryMapped.toLowerCase().includes(searchQuery.toLowerCase());
+                          l.category.toLowerCase().includes(searchQuery.toLowerCase());
                           
     console.log(`[Diagnostic] Lesson "${l.title}":`, {
       sectionAllowed,
@@ -173,7 +158,6 @@ export default function StudentLessons({ onTabChange, onSelectLesson, lessons, c
         studentSection: currentUser?.section,
         uploadedByEmail: l.uploadedByEmail,
         category: l.category,
-        lessonCategoryMapped,
         enrolledCategories
       }
     });
@@ -187,7 +171,7 @@ export default function StudentLessons({ onTabChange, onSelectLesson, lessons, c
       l.id !== 'learning-active' &&
       !l.assignedTo?.includes('Teachers') &&
       isLessonSectionAllowed(l) &&
-      (subjectCategoryMap[l.category] ?? l.category) === cat &&
+      l.category === cat &&
       (enrolledSubjects.length === 0 || enrolledCategories.includes(cat))
     ).length;
 
@@ -249,17 +233,15 @@ export default function StudentLessons({ onTabChange, onSelectLesson, lessons, c
 
       {/* BENTO CATEGORIES GRID — 3 on mobile, up to 4 or 7 on wider screens */}
       <section className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 gap-3">
-        {categories.map((cat) => {
+      {categories.map((cat) => {
           const isSelected = selectedCategory === cat.title;
-          const isEnrolled = enrolledCategories.includes(cat.title);
           const liveCount = countForCategory(cat.title);
           return (
             <button
               key={cat.title}
-              onClick={() => isEnrolled ? setSelectedCategory(isSelected ? null : cat.title) : undefined}
-              disabled={!isEnrolled}
-              className={`flex flex-col items-center p-6 bg-white rounded-xl border border-slate-100 shadow-sm transition-all group relative overflow-hidden
-                ${isEnrolled ? `${cat.colorClass} active:scale-95 cursor-pointer` : 'opacity-35 grayscale cursor-not-allowed'}
+              onClick={() => setSelectedCategory(isSelected ? null : cat.title)}
+              className={`flex flex-col items-center p-6 bg-white rounded-xl border border-slate-100 shadow-sm transition-all group relative overflow-hidden active:scale-95 cursor-pointer
+                ${cat.colorClass}
                 ${isSelected ? cat.activeClass : ''}`}
             >
               <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-sm shrink-0">
@@ -267,17 +249,12 @@ export default function StudentLessons({ onTabChange, onSelectLesson, lessons, c
               </div>
               <span className="text-base font-extrabold tracking-tight block">{cat.title}</span>
               <span className="text-[12px] font-bold text-slate-400 block mt-0.5">
-                {isEnrolled ? `${liveCount} Lesson${liveCount !== 1 ? 's' : ''}` : 'Not Enrolled'}
+                {liveCount} Lesson{liveCount !== 1 ? 's' : ''}
               </span>
 
               {isSelected && (
                 <div className="absolute top-2 right-2 flex items-center justify-center w-5 h-5 rounded-full bg-slate-800 text-white">
                   <span className="material-symbols-outlined text-xs">check</span>
-                </div>
-              )}
-              {!isEnrolled && (
-                <div className="absolute top-2 right-2">
-                  <span className="material-symbols-outlined text-sm text-slate-400">lock</span>
                 </div>
               )}
             </button>

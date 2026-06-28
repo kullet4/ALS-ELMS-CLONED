@@ -42,38 +42,9 @@ export default function StudentHome({ onTabChange, coins, streakDays, currentUse
       {/* Main Dashboard Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        {/* Continue Learning Card */}
-        <div className="lg:col-span-8">
-          <div className="bg-sky-50 dark:bg-[#e3f2fd] rounded-2xl p-6 border border-sky-100 flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden h-full">
-            <div className="flex-1 relative z-10">
-              <span className="text-xs font-bold text-sky-700 uppercase tracking-widest block mb-1">Continue Learning</span>
-              <h2 className="text-2xl font-black text-slate-800 mb-1 leading-tight">Basic Addition</h2>
-              <p className="text-sm text-slate-500 mb-6">Module 2 • Lesson 4 of 12</p>
-              
-              <button 
-                onClick={() => onTabChange('learning')}
-                className="bg-[#FF9800] hover:bg-[#E68A00] text-white px-6 py-3 rounded-xl flex items-center gap-3 font-semibold text-sm transition-all shadow-md active:scale-95"
-              >
-                <span className="material-symbols-outlined fill-icon" style={{ fontVariationSettings: "'FILL' 1" }}>play_arrow</span>
-                Keep Going
-              </button>
-            </div>
-
-            <div className="w-full md:w-44 aspect-square rounded-2xl bg-white flex items-center justify-center p-3 shrink-0 shadow-sm relative z-10 transition-transform duration-300 hover:scale-105">
-              <img 
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDKQy5qx5_oRfgyzUOTKK65y9XdbTd7Vc2OCIKt3g4AgQy1ZTnipl94_t9zebGGyX20ShgLexm2gPfjDk6qtyzL7rBwozVuGJF8-OOTMo_sHDXqlF02VSIDkkRO6pnS63uK9jHZS4CdPINz8sPIDxtuN-etkl0w08YiooCwbzHhg0ZUu-vyMtYNn7jP1rcUSdHyDmv8NXzYt8c_kuPvcOoUoIX6cO9C-IkVYFGMwxI_kIyKnbKsWRNd6TDJG2H5URHy6ZoTg20oGIU" 
-                alt="Basic Addition visual" 
-                className="max-h-full object-contain"
-              />
-            </div>
-
-            {/* Backdrop Blur Ring */}
-            <div className="absolute -bottom-10 -right-10 w-44 h-44 bg-sky-200/40 rounded-full blur-3xl"></div>
-          </div>
-        </div>
 
         {/* Progress Summary Card */}
-        <div className="lg:col-span-4">
+        <div className="lg:col-span-12">
           <div className="bg-white rounded-2xl p-6 border border-slate-100 flex flex-col justify-between h-full shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <span className="text-xs font-bold text-slate-400 tracking-wider">YOUR BALANCE</span>

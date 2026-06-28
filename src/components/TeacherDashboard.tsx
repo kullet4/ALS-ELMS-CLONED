@@ -56,24 +56,7 @@ type LessonCategory =
 
 const isSubjectMatch = (recordSubject: string | undefined, filterSubject: string): boolean => {
   if (!recordSubject) return false;
-  if (recordSubject === filterSubject) return true;
-
-  // Support old short-name subjects stored in Firestore before migration
-  const legacyMap: Record<string, string[]> = {
-    'LS1 English - Communication Skills': ['English', 'LS1 English'],
-    'LS1 Filipino - Communication Skills': ['Filipino', 'LS1 Filipino'],
-    'LS2 Science - Scientific Literacy': ['Science', 'LS2 Science'],
-    'LS3 Mathematics - Problem Solving': ['Mathematics', 'Math', 'LS3 Mathematics'],
-    'LS4 Life and Career Skills': ['Life Skills', 'LS4 Life Skills'],
-    'LS5 Understanding Culture and Society': ['Culture', 'Society', 'LS5'],
-    'LS6 Digital Literacy': ['Digital Literacy', 'LS6'],
-  };
-
-  const fallbacks = legacyMap[filterSubject];
-  if (fallbacks && fallbacks.includes(recordSubject)) {
-    return true;
-  }
-  return false;
+  return recordSubject === filterSubject;
 };
 
 const isStudentEnrolledInSubject = (studentSubjects: string[] | undefined, filterSubject: string): boolean => {

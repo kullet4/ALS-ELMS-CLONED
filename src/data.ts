@@ -13,7 +13,7 @@ export const MOCK_LESSONS: Lesson[] = [
   {
     id: 'eng-reality-fantasy',
     title: 'Real or Make-Believe?',
-    category: 'LS1 English',
+    category: 'LS1 English - Communication Skills',
     level: 1,
     duration: '10 mins',
     description: 'Learning Strand 1: Communication Skills. Learn to determine and distinguish whether story events are Reality or Fantasy.',
@@ -65,7 +65,7 @@ Ask yourself: "Could this event truly happen in real life?" If yes, it is Realit
   {
     id: 'mat-1',
     title: 'Understanding Big Numbers',
-    category: 'LS3 Mathematics',
+    category: 'LS3 Mathematics - Problem Solving',
     level: 1,
     duration: '20 mins',
     description: 'Learn the fundamentals of representing large numbers, decimal place values, and read/write large numerals correctly in daily life.',
@@ -76,7 +76,7 @@ Ask yourself: "Could this event truly happen in real life?" If yes, it is Realit
   {
     id: 'sci-2',
     title: 'The Secret Life of Plants',
-    category: 'LS2 Science',
+    category: 'LS2 Science - Scientific Literacy',
     level: 2,
     duration: '15 mins',
     description: 'Explore plant processes like photosynthesis, osmosis, transpiration, and learn how local flora supports oxygen levels and local farming.',
@@ -87,7 +87,7 @@ Ask yourself: "Could this event truly happen in real life?" If yes, it is Realit
   {
     id: 'eng-1',
     title: 'Building Better Sentences',
-    category: 'LS1 English',
+    category: 'LS1 English - Communication Skills',
     level: 1,
     duration: '18 mins',
     description: 'Master structure essentials: nouns, verbs, predicates and common punctuation that elevate your communicative and speaking potential.',
@@ -98,7 +98,7 @@ Ask yourself: "Could this event truly happen in real life?" If yes, it is Realit
   {
     id: 'lif-3',
     title: 'Helping Your Community',
-    category: 'LS4 Life Skills',
+    category: 'LS4 Life and Career Skills',
     level: 3,
     duration: '25 mins',
     description: 'Understand civic responsibilities, leadership models, disaster mitigation, and collaborative volunteer strategies to build stronger towns.',
@@ -109,7 +109,7 @@ Ask yourself: "Could this event truly happen in real life?" If yes, it is Realit
   {
     id: 'learning-active',
     title: 'Ecosystems and Balance',
-    category: 'LS2 Science',
+    category: 'LS2 Science - Scientific Literacy',
     level: 2,
     duration: '12:45 mins',
     description: 'An ecosystem is a community of living organisms in conjunction with the nonliving components of their environment, interacting as a system. These biotic and abiotic components are linked together through nutrient cycles and energy flows.',
