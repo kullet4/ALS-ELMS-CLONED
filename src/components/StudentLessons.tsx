@@ -1,6 +1,79 @@
 import { useState } from 'react';
 import { Lesson, StudentTab, UserAccount } from '../types';
 
+interface CategoryConfig {
+  icon: string;
+  colorClass: string;
+  activeClass: string;
+  textClass: string;
+}
+
+const getCategoryConfig = (categoryName: string): CategoryConfig => {
+  const name = categoryName.toLowerCase();
+  if (name.includes('math')) {
+    return {
+      icon: 'calculate',
+      colorClass: 'bg-indigo-50 border-indigo-100 hover:border-indigo-300 text-indigo-700',
+      activeClass: 'ring-2 ring-indigo-500',
+      textClass: 'bg-indigo-50 text-indigo-700',
+    };
+  }
+  if (name.includes('science')) {
+    return {
+      icon: 'biotech',
+      colorClass: 'bg-emerald-50 border-emerald-100 hover:border-emerald-300 text-emerald-700',
+      activeClass: 'ring-2 ring-emerald-500',
+      textClass: 'bg-emerald-50 text-emerald-700',
+    };
+  }
+  if (name.includes('english')) {
+    return {
+      icon: 'menu_book',
+      colorClass: 'bg-amber-50 border-amber-100 hover:border-amber-300 text-amber-700',
+      activeClass: 'ring-2 ring-amber-500',
+      textClass: 'bg-amber-50 text-amber-700',
+    };
+  }
+  if (name.includes('filipino')) {
+    return {
+      icon: 'translate',
+      colorClass: 'bg-orange-50 border-orange-100 hover:border-orange-300 text-orange-700',
+      activeClass: 'ring-2 ring-orange-500',
+      textClass: 'bg-orange-50 text-orange-700',
+    };
+  }
+  if (name.includes('life') || name.includes('career')) {
+    return {
+      icon: 'volunteer_activism',
+      colorClass: 'bg-rose-50 border-rose-100 hover:border-rose-300 text-rose-700',
+      activeClass: 'ring-2 ring-rose-500',
+      textClass: 'bg-rose-50 text-rose-700',
+    };
+  }
+  if (name.includes('culture') || name.includes('society')) {
+    return {
+      icon: 'public',
+      colorClass: 'bg-purple-50 border-purple-100 hover:border-purple-300 text-purple-700',
+      activeClass: 'ring-2 ring-purple-500',
+      textClass: 'bg-purple-50 text-purple-700',
+    };
+  }
+  if (name.includes('digital') || name.includes('literacy') || name.includes('computer')) {
+    return {
+      icon: 'computer',
+      colorClass: 'bg-sky-50 border-sky-100 hover:border-sky-300 text-sky-700',
+      activeClass: 'ring-2 ring-sky-500',
+      textClass: 'bg-sky-50 text-sky-700',
+    };
+  }
+  return {
+    icon: 'school',
+    colorClass: 'bg-slate-50 border-slate-100 hover:border-slate-300 text-slate-700',
+    activeClass: 'ring-2 ring-slate-500',
+    textClass: 'bg-slate-50 text-slate-700',
+  };
+};
+
 interface StudentLessonsProps {
   onTabChange: (tab: StudentTab) => void;
   onSelectLesson: (lesson: Lesson) => void;
@@ -34,10 +107,6 @@ export default function StudentLessons({ onTabChange, onSelectLesson, lessons, c
     'Filipino': 'LS1 Filipino',
     'Life Skills': 'LS4 Life Skills',
   };
-  const enrolledCategories = enrolledSubjects.length > 0
-    ? [...new Set(enrolledSubjects.map(s => subjectCategoryMap[s] ?? s))]
-    : ['LS1 English', 'LS1 Filipino', 'LS2 Science', 'LS3 Mathematics', 'LS4 Life Skills', 'LS5 Culture & Society', 'LS6 Digital Literacy'];
-
   // Check section alignment based on teacher-student relationship and sectionId target
   const isLessonSectionAllowed = (l: Lesson) => {
     if (l.uploadedByEmail) {
@@ -63,6 +132,21 @@ export default function StudentLessons({ onTabChange, onSelectLesson, lessons, c
     }
     return !l.sectionId || l.sectionId === currentUser?.section;
   };
+
+  // Get unique categories from active lessons that this student is allowed to see
+  const lessonCategories = lessons
+    .filter(l => l.id !== 'learning-active' && !l.assignedTo?.includes('Teachers') && isLessonSectionAllowed(l))
+    .map(l => subjectCategoryMap[l.category] ?? l.category);
+
+  // Get categories from the student's enrolled subjects
+  const userCategories = enrolledSubjects.map(s => subjectCategoryMap[s] ?? s);
+
+  // Combine them to get the complete list of unique categories, sorted alphabetically
+  const uniqueCategories = [...new Set([...lessonCategories, ...userCategories])].filter(Boolean).sort();
+
+  const enrolledCategories = enrolledSubjects.length > 0
+    ? [...new Set(enrolledSubjects.map(s => subjectCategoryMap[s] ?? s))]
+    : uniqueCategories;
 
   // Filter lessons based on category selection, search query, and enrolled subjects
   const filteredLessons = lessons.filter(l => {
@@ -107,15 +191,15 @@ export default function StudentLessons({ onTabChange, onSelectLesson, lessons, c
       (enrolledSubjects.length === 0 || enrolledCategories.includes(cat))
     ).length;
 
-  const categories = [
-    { title: 'LS1 English',          icon: 'menu_book',           colorClass: 'bg-amber-50 border-amber-100 hover:border-amber-300 text-amber-700',    activeClass: 'ring-2 ring-amber-500' },
-    { title: 'LS1 Filipino',         icon: 'translate',           colorClass: 'bg-orange-50 border-orange-100 hover:border-orange-300 text-orange-700', activeClass: 'ring-2 ring-orange-500' },
-    { title: 'LS2 Science',          icon: 'biotech',             colorClass: 'bg-emerald-50 border-emerald-100 hover:border-emerald-300 text-emerald-700', activeClass: 'ring-2 ring-emerald-500' },
-    { title: 'LS3 Mathematics',      icon: 'calculate',           colorClass: 'bg-indigo-50 border-indigo-100 hover:border-indigo-300 text-indigo-700', activeClass: 'ring-2 ring-indigo-500' },
-    { title: 'LS4 Life Skills',      icon: 'volunteer_activism',  colorClass: 'bg-rose-50 border-rose-100 hover:border-rose-300 text-rose-700',       activeClass: 'ring-2 ring-rose-500' },
-    { title: 'LS5 Culture & Society',icon: 'public',              colorClass: 'bg-purple-50 border-purple-100 hover:border-purple-300 text-purple-700', activeClass: 'ring-2 ring-purple-500' },
-    { title: 'LS6 Digital Literacy', icon: 'computer',            colorClass: 'bg-sky-50 border-sky-100 hover:border-sky-300 text-sky-700',            activeClass: 'ring-2 ring-sky-500' },
-  ];
+  const categories = uniqueCategories.map(catTitle => {
+    const config = getCategoryConfig(catTitle);
+    return {
+      title: catTitle,
+      icon: config.icon,
+      colorClass: config.colorClass,
+      activeClass: config.activeClass,
+    };
+  });
 
   return (
     <div className="space-y-6">
@@ -260,13 +344,7 @@ export default function StudentLessons({ onTabChange, onSelectLesson, lessons, c
                 <div className="flex flex-col justify-center min-w-0 flex-1">
                   <div className="flex flex-wrap gap-1.5 mb-1.5">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase w-fit ${
-                      l.category === 'LS3 Mathematics'      ? 'bg-indigo-50 text-indigo-700' :
-                      l.category === 'LS2 Science'          ? 'bg-emerald-50 text-emerald-700' :
-                      l.category === 'LS1 English'          ? 'bg-amber-50 text-amber-700' :
-                      l.category === 'LS1 Filipino'         ? 'bg-orange-50 text-orange-700' :
-                      l.category === 'LS5 Culture & Society'? 'bg-purple-50 text-purple-700' :
-                      l.category === 'LS6 Digital Literacy' ? 'bg-sky-50 text-sky-700' :
-                      'bg-rose-50 text-rose-700'
+                      getCategoryConfig(l.category).textClass
                     }`}>
                       {l.category} • Level {l.level}
                     </span>
@@ -292,13 +370,7 @@ export default function StudentLessons({ onTabChange, onSelectLesson, lessons, c
                     ) : (
                       <div className="flex items-center gap-1.5 text-slate-400">
                         <span className="material-symbols-outlined text-[13px]">
-                          {l.category === 'LS3 Mathematics'       ? 'calculate' : 
-                           l.category === 'LS2 Science'           ? 'schedule' : 
-                           l.category === 'LS1 English'           ? 'stars' :
-                           l.category === 'LS1 Filipino'          ? 'translate' :
-                           l.category === 'LS5 Culture & Society' ? 'public' :
-                           l.category === 'LS6 Digital Literacy'  ? 'computer' :
-                           'emoji_events'}
+                          {getCategoryConfig(l.category).icon}
                         </span>
                         <span className="text-[11px] font-semibold text-slate-500">{l.rewardText}</span>
                       </div>
