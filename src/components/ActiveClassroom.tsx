@@ -66,12 +66,13 @@ export function normalizeImageUrl(url: string | undefined, category?: string): s
 }
 
 interface ActiveClassroomProps {
-  lesson: Lesson;
+  lesson: Lesson | null;
   onAddCoins: (coins: number) => void;
   onClose: () => void;
+  onNavigateToTab?: (tab: 'home' | 'lessons' | 'progress' | 'profile' | 'learning') => void;
 }
 
-export default function ActiveClassroom({ lesson, onAddCoins, onClose }: ActiveClassroomProps) {
+export default function ActiveClassroom({ lesson, onAddCoins, onClose, onNavigateToTab }: ActiveClassroomProps) {
   const [selectedPart, setSelectedPart] = useState<number>(1);
   const [quizAnswers, setQuizAnswers] = useState<Record<number, string>>({});
   const [quizzesSubmitted, setQuizzesSubmitted] = useState<Record<number, boolean>>({});
@@ -79,8 +80,8 @@ export default function ActiveClassroom({ lesson, onAddCoins, onClose }: ActiveC
   const [rfAnswers, setRfAnswers] = useState<Record<number, 'reality' | 'fantasy'>>({});
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
 
-  const isSupabase = !!lesson.bucketUrl;
-  const hasCustomParts = !!lesson.parts && lesson.parts.length > 0;
+  const isSupabase = lesson ? !!lesson.bucketUrl : false;
+  const hasCustomParts = lesson ? (!!lesson.parts && lesson.parts.length > 0) : false;
 
   interface DisplayPart {
     id: number;
@@ -91,8 +92,8 @@ export default function ActiveClassroom({ lesson, onAddCoins, onClose }: ActiveC
     quizIndex?: number;
   }
 
-  const lessonParts = lesson.parts || [];
-  const quizArray = lesson.quizzes || (lesson.quiz ? [lesson.quiz] : []);
+  const lessonParts = lesson?.parts || [];
+  const quizArray = lesson?.quizzes || (lesson?.quiz ? [lesson.quiz] : []);
 
   const parts: DisplayPart[] = hasCustomParts ? [
     ...lessonParts.map((part, idx) => ({
@@ -113,15 +114,12 @@ export default function ActiveClassroom({ lesson, onAddCoins, onClose }: ActiveC
     { id: 1, type: 'supabase' as const, title: '1. Supabase Document', icon: 'cloud_download' },
     { id: 2, type: 'supabase' as const, title: '2. Learning Objectives', icon: 'menu_book' },
     { id: 3, type: 'supabase' as const, title: '3. Lesson Quiz', icon: 'verified' }
-  ] : [
-    { id: 1, type: 'default' as const, title: '1. What is an Ecosystem?', icon: 'eco' },
-    { id: 2, type: 'default' as const, title: '2. Nutrient Cycles', icon: 'sync' },
-    { id: 3, type: 'default' as const, title: '3. Food Chains & Energy', icon: 'bolt' }
-  ];
+  ] : [];
 
   const activePartInfo = parts.find(p => p.id === selectedPart) || parts[0];
 
   const getCustomQuiz = (quizIdx: number) => {
+    if (!lesson) return null;
     const q = quizArray[quizIdx];
     if (!q) return null;
 
@@ -146,6 +144,7 @@ export default function ActiveClassroom({ lesson, onAddCoins, onClose }: ActiveC
 
   // Tailored questions for custom Supabase category assets
   const getSupabaseQuiz = () => {
+    if (!lesson) return null;
     switch (lesson.category as string) {
       case 'LS3 Mathematics - Problem Solving':
         return {
@@ -231,7 +230,7 @@ export default function ActiveClassroom({ lesson, onAddCoins, onClose }: ActiveC
 
   const handleQuizSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!activePartInfo) return;
+    if (!lesson || !activePartInfo) return;
 
     if (activePartInfo.type === 'quiz') {
       const qIdx = activePartInfo.quizIndex ?? 0;
@@ -248,7 +247,7 @@ export default function ActiveClassroom({ lesson, onAddCoins, onClose }: ActiveC
       } else {
         setQuizFeedbacks(prev => ({ ...prev, [qIdx]: 'Incorrect answer. Re-read the objectives or chapters above and try again!' }));
       }
-    } else if (isSupabase) {
+    } else if (isSupabase && currentQuiz) {
       const ans = quizAnswers[-1];
       if (!ans) return;
 
@@ -258,17 +257,6 @@ export default function ActiveClassroom({ lesson, onAddCoins, onClose }: ActiveC
         onAddCoins(100);
       } else {
         setQuizFeedbacks(prev => ({ ...prev, [-1]: 'Incorrect answer. Re-read the objectives or consult your mentor. Try again!' }));
-      }
-    } else {
-      const ans = quizAnswers[-1];
-      if (!ans) return;
-
-      if (ans === 'A') {
-        setQuizFeedbacks(prev => ({ ...prev, [-1]: 'Tama! Correct! 🎉 The sun is the absolute primary energy source powering all plants (producers) on Earth through Photosynthesis. You earned +100 Coins!' }));
-        setQuizzesSubmitted(prev => ({ ...prev, [-1]: true }));
-        onAddCoins(100);
-      } else {
-        setQuizFeedbacks(prev => ({ ...prev, [-1]: 'Not quite! Think of where plants get their primary source of light to make food. Try again!' }));
       }
     }
   };

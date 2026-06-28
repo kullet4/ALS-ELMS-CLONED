@@ -602,9 +602,10 @@ export default function App() {
 
                 {studentTab === 'learning' && (
                   <ActiveClassroom
-                    lesson={selectedLesson || lessons[0] || MOCK_LESSONS[0]}
+                    lesson={selectedLesson}
                     onAddCoins={handleRewardCoins}
                     onClose={() => setStudentTab('home')}
+                    onNavigateToTab={(tab) => setStudentTab(tab)}
                   />
                 )}
 
