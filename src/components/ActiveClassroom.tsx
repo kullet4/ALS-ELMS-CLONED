@@ -261,6 +261,30 @@ export default function ActiveClassroom({ lesson, onAddCoins, onClose, onNavigat
     }
   };
 
+  if (!lesson) {
+    return (
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-8 flex flex-col items-center justify-center text-center space-y-6 min-h-[450px]">
+        <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 shadow-inner border border-indigo-100 animate-bounce mt-4">
+          <span className="material-symbols-outlined text-4xl">school</span>
+        </div>
+        <div className="max-w-md space-y-2">
+          <h2 className="text-2xl font-black text-slate-805 tracking-tight">Your Active Classroom is Ready!</h2>
+          <p className="text-sm text-slate-500 leading-relaxed font-semibold">
+            To start learning, please choose a lesson from the Lessons Browser. 
+            You will find interactive slides, activities, and quizzes tailored to your program.
+          </p>
+        </div>
+        <button
+          onClick={() => onNavigateToTab?.('lessons')}
+          className="bg-indigo-600 hover:bg-indigo-700 cursor-pointer text-white font-extrabold text-xs px-6 py-3 rounded-xl flex items-center gap-2 transition-all active:scale-[0.98] shadow-md tracking-wider uppercase mb-4"
+        >
+          <span className="material-symbols-outlined text-sm">search</span>
+          Browse Lessons
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col lg:flex-row h-full min-h-[500px]">
       
@@ -313,26 +337,38 @@ export default function ActiveClassroom({ lesson, onAddCoins, onClose, onNavigat
       <div className="flex-1 p-6 lg:p-8 space-y-6 flex flex-col justify-between overflow-y-auto w-full">
         
         {/* Content Section */}
-        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4 shrink-0">
-            <div>
-              <span className="text-[10px] font-black uppercase tracking-wider text-indigo-700 block">
-                {hasCustomParts ? `Interactive Blueprint • ${lesson.category}` : isSupabase ? `Supabase Cloud Asset • ${lesson.category}` : `Secondary Education • ${lesson.category}`}
-              </span>
-              <h3 className="text-xl font-extrabold text-slate-800 tracking-tight mt-1">
-                {hasCustomParts 
-                  ? (activePartInfo?.type === 'slide' 
-                      ? lessonParts[activePartInfo.slideIndex!].title 
-                      : `Review Assessments Check`) 
-                  : isSupabase 
-                    ? lesson.title 
-                    : "Ecosystems & Bio-diversity balance"}
-              </h3>
+        {parts.length === 0 ? (
+          <div className="flex-grow flex flex-col items-center justify-center text-center p-8 space-y-6 my-auto">
+            <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 shadow-inner border border-indigo-100 animate-pulse">
+              <span className="material-symbols-outlined text-4xl">auto_stories</span>
             </div>
-            <span className="text-[11px] font-black text-slate-500 bg-slate-100 px-3 py-1 rounded-full shrink-0">
-              Page {selectedPart} of {parts.length}
-            </span>
+            <div className="max-w-md space-y-2">
+              <h3 className="text-xl font-black text-slate-800 tracking-tight">No Study Materials Available</h3>
+              <p className="text-sm text-slate-500 leading-relaxed font-semibold">
+                This lesson doesn't contain any textbook pages or quizzes yet. 
+                Check back later or contact your instructor to load classroom materials.
+              </p>
+            </div>
           </div>
+        ) : (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4 shrink-0">
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-indigo-700 block">
+                  {hasCustomParts ? `Interactive Blueprint • ${lesson.category}` : `Supabase Cloud Asset • ${lesson.category}`}
+                </span>
+                <h3 className="text-xl font-extrabold text-slate-800 tracking-tight mt-1">
+                  {hasCustomParts 
+                    ? (activePartInfo?.type === 'slide' 
+                        ? lessonParts[activePartInfo.slideIndex!].title 
+                        : `Review Assessments Check`) 
+                    : lesson.title}
+                </h3>
+              </div>
+              <span className="text-[11px] font-black text-slate-500 bg-slate-100 px-3 py-1 rounded-full shrink-0">
+                Page {selectedPart} of {parts.length}
+              </span>
+            </div>
 
           {/* Type 1: Custom Textbook Slide Reading */}
           {activePartInfo?.type === 'slide' && (() => {
@@ -380,6 +416,112 @@ export default function ActiveClassroom({ lesson, onAddCoins, onClose, onNavigat
                   <p className="text-sm font-semibold text-slate-705 leading-relaxed whitespace-pre-line font-sans bg-slate-50/50 p-5 rounded-2xl border border-slate-100">
                     {lessonParts[activePartInfo.slideIndex!].content}
                   </p>
+
+                  {lesson.id === 'eng-reality-fantasy' && activePartInfo.slideIndex === 1 && (
+                    <div className="space-y-3 mt-4">
+                      <div className="bg-indigo-50 border border-indigo-150 p-4 rounded-2xl flex items-center gap-3">
+                        <span className="material-symbols-outlined text-indigo-700 text-2xl font-light">tips_and_updates</span>
+                        <div>
+                          <span className="font-extrabold text-[10px] uppercase text-indigo-700 tracking-wider block">
+                            ACTIVITY 2: Reality or Fantasy?
+                          </span>
+                          <p className="text-xs font-semibold text-slate-600 mt-0.5">
+                            Check each alternative scenario card. Tap <strong>Reality (Real)</strong> if it can happen, or <strong>Fantasy (Make-believe)</strong> if it is just imagination!
+                          </p>
+                        </div>
+                      </div>
+
+                      {[
+                        { id: 1, text: 'A mother kissing and cuddling her baby.', type: 'reality', emoji: '👩‍👦', hint: 'This represents normal parental care and family bonding. It is fully Real!' },
+                        { id: 2, text: 'A friendly white ghost floating in the air.', type: 'fantasy', emoji: '👻', hint: 'Ghosts are mythical spirits that cannot be proven or touched in real life.' },
+                        { id: 3, text: 'A winged fairy flying and sprinkling magical dust.', type: 'fantasy', emoji: '🧚‍♀️', hint: 'Fairies with wings and magic dust exist only in fictional fairy tales!' },
+                        { id: 4, text: 'A person riding a motorcycle down the highway.', type: 'reality', emoji: '🏍️', hint: 'Modern motorbikes are standard physical vehicles people ride every day.' },
+                        { id: 5, text: 'Santa Claus riding a sleigh with flying reindeer.', type: 'fantasy', emoji: '🎅', hint: 'Sleighs pulled by flying reindeer through the stars are traditional seasonal fantasy tales!' }
+                      ].map((item) => {
+                        const ans = rfAnswers[item.id];
+                        const isCorrect = ans === item.type;
+                        const isSubmitted = !!ans;
+
+                        return (
+                          <div 
+                            key={item.id} 
+                            className={`p-3.5 rounded-xl border transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+                              isSubmitted
+                                ? isCorrect
+                                  ? 'bg-emerald-50/70 border-emerald-200 shadow-3xs'
+                                  : 'bg-rose-50/70 border-rose-200 shadow-3xs'
+                                : 'bg-white border-slate-200 hover:border-slate-300'
+                            }`}
+                          >
+                            <div className="flex items-start gap-3">
+                              <span className="text-2xl bg-slate-100 p-2 rounded-lg block select-none shrink-0">
+                                {item.emoji}
+                              </span>
+                              <div>
+                                <span className="text-[9px] text-slate-400 font-black uppercase tracking-wider block">Section #{item.id}</span>
+                                <p className="text-xs font-black text-slate-800 leading-tight mt-0.5">{item.text}</p>
+                                
+                                {isSubmitted && (
+                                  <p className={`text-[10px] font-bold mt-1 leading-snug ${isCorrect ? 'text-emerald-700' : 'text-rose-700'}`}>
+                                    {isCorrect ? `✓ Correct! ${item.hint}` : `✗ Try again! Think: ${item.hint}`}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2 shrink-0 self-end md:self-auto">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setRfAnswers(prev => ({ ...prev, [item.id]: 'reality' }));
+                                  if (item.type === 'reality' && rfAnswers[item.id] !== 'reality') {
+                                    onAddCoins(10);
+                                  }
+                                }}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer ${
+                                  ans === 'reality'
+                                    ? item.type === 'reality'
+                                      ? 'bg-emerald-600 text-white shadow-xs'
+                                      : 'bg-rose-600 text-white shadow-xs'
+                                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200/85 hover:text-slate-900'
+                                }`}
+                              >
+                                Reality
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setRfAnswers(prev => ({ ...prev, [item.id]: 'fantasy' }));
+                                  if (item.type === 'fantasy' && rfAnswers[item.id] !== 'fantasy') {
+                                    onAddCoins(10);
+                                  }
+                                }}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer ${
+                                  ans === 'fantasy'
+                                    ? item.type === 'fantasy'
+                                      ? 'bg-indigo-650 bg-indigo-600 text-white shadow-xs'
+                                      : 'bg-rose-600 text-white shadow-xs'
+                                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200/85 hover:text-slate-900'
+                                }`}
+                              >
+                                Fantasy
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+
+                      <div className="p-4 bg-amber-50 rounded-xl border border-amber-100 flex gap-3 text-amber-900">
+                        <span className="material-symbols-outlined text-amber-700 shrink-0">task_alt</span>
+                        <div className="text-xs space-y-1">
+                          <p className="font-extrabold">Ready to Complete the Lesson?</p>
+                          <p className="text-amber-800 leading-relaxed">
+                            Tap the option buttons for all 5 cards! Once done, click <strong>Next Part</strong> down below to proceed to the Post-Test check!
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             );
@@ -604,248 +746,8 @@ export default function ActiveClassroom({ lesson, onAddCoins, onClose, onNavigat
             </>
           )}
 
-          {/* Type 4: Built-in general default curriculum lessons */}
-          {activePartInfo?.type === 'default' && (
-            <>
-              {activePartInfo.id === 1 && (
-                <div className="space-y-6 animate-in fade-in duration-200">
-                  <div className="w-full h-56 rounded-2xl overflow-hidden shadow-sm aspect-video">
-                    <img 
-                      src="https://lh3.googleusercontent.com/aida-public/AB6AXuBTdnkTbMTcfe3EVpE_WFb-IYjbHjlc4Fj5n4PJskLfJ___muUVwBSnaRauufk7tpubRtemsghf2lYhK5n9zeuVhwVoUpgVLQPxWyAPvK1CWuaxlSft8EjSu540sjYYwEcdLBWSQZm7alxidVQKeYXDbKGIXHEllNQf9Ff2WBqDA6MhtFcaKhbcLQVmV4OuY2Iw9Une1gnaWnpgQxJXjWHvI8i2v3MiICz8loe066Bq0COU8PorEljLV4Q03f3At381AR9gw4nJ1GY" 
-                      alt="Ecosystem ecology visual" 
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-
-                  <div className="space-y-4">
-                    <p className="text-base font-medium text-slate-700 leading-relaxed">
-                      An **ecosystem** is a community of living organisms in conjunction with the nonliving components of their environment, interacting as a system. These biotic and abiotic components are linked together through nutrient cycles and energy flows.
-                    </p>
-                    <p className="text-sm text-slate-500 leading-relaxed">
-                      Think of a peaceful lake or forest. Every frog, lily pad, water molecule, and golden ray of sunshine works in unity. If any element — like water purity — deteriorates, the balance decomposes, affecting fish and vegetation alike.
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {activePartInfo.id === 2 && (
-                lesson.id === 'eng-reality-fantasy' ? (
-                  <div className="space-y-6 animate-in fade-in duration-200">
-                    <div className="bg-indigo-50 border border-indigo-150 p-4 rounded-2xl flex items-center gap-3">
-                      <span className="material-symbols-outlined text-indigo-700 text-2xl font-light">tips_and_updates</span>
-                      <div>
-                        <span className="font-extrabold text-[10px] uppercase text-indigo-700 tracking-wider block">
-                          ACTIVITY 2: Reality or Fantasy?
-                        </span>
-                        <p className="text-xs font-semibold text-slate-600 mt-0.5">
-                          Check each alternative scenario card. Tap <strong>Reality (Real)</strong> if it can happen, or <strong>Fantasy (Make-believe)</strong> if it is just imagination!
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="space-y-3">
-                      {[
-                        { id: 1, text: 'A mother kissing and cuddling her baby.', type: 'reality', emoji: '👩‍👦', hint: 'This represents normal parental care and family bonding. It is fully Real!' },
-                        { id: 2, text: 'A friendly white ghost floating in the air.', type: 'fantasy', emoji: '👻', hint: 'Ghosts are mythical spirits that cannot be proven or touched in real life.' },
-                        { id: 3, text: 'A winged fairy flying and sprinkling magical dust.', type: 'fantasy', emoji: '🧚‍♀️', hint: 'Fairies with wings and magic dust exist only in fictional fairy tales!' },
-                        { id: 4, text: 'A person riding a motorcycle down the highway.', type: 'reality', emoji: '🏍️', hint: 'Modern motorbikes are standard physical vehicles people ride every day.' },
-                        { id: 5, text: 'Santa Claus riding a sleigh with flying reindeer.', type: 'fantasy', emoji: '🎅', hint: 'Sleighs pulled by flying reindeer through the stars are traditional seasonal fantasy tales!' }
-                      ].map((item) => {
-                        const ans = rfAnswers[item.id];
-                        const isCorrect = ans === item.type;
-                        const isSubmitted = !!ans;
-
-                        return (
-                          <div 
-                            key={item.id} 
-                            className={`p-3.5 rounded-xl border transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 ${
-                              isSubmitted
-                                ? isCorrect
-                                  ? 'bg-emerald-50/70 border-emerald-200 shadow-3xs'
-                                  : 'bg-rose-50/70 border-rose-200 shadow-3xs'
-                                : 'bg-white border-slate-200 hover:border-slate-300'
-                            }`}
-                          >
-                            <div className="flex items-start gap-3">
-                              <span className="text-2xl bg-slate-100 p-2 rounded-lg block select-none shrink-0">
-                                {item.emoji}
-                              </span>
-                              <div>
-                                <span className="text-[9px] text-slate-400 font-black uppercase tracking-wider block">Section #{item.id}</span>
-                                <p className="text-xs font-black text-slate-800 leading-tight mt-0.5">{item.text}</p>
-                                
-                                {isSubmitted && (
-                                  <p className={`text-[10px] font-bold mt-1 leading-snug ${isCorrect ? 'text-emerald-700' : 'text-rose-700'}`}>
-                                    {isCorrect ? `✓ Correct! ${item.hint}` : `✗ Try again! Think: ${item.hint}`}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-2 shrink-0 self-end md:self-auto">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setRfAnswers(prev => ({ ...prev, [item.id]: 'reality' }));
-                                  if (item.type === 'reality' && rfAnswers[item.id] !== 'reality') {
-                                    onAddCoins(10);
-                                  }
-                                }}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer ${
-                                  ans === 'reality'
-                                    ? item.type === 'reality'
-                                      ? 'bg-emerald-600 text-white shadow-xs'
-                                      : 'bg-rose-600 text-white shadow-xs'
-                                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200/85 hover:text-slate-900'
-                                }`}
-                              >
-                                Reality
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setRfAnswers(prev => ({ ...prev, [item.id]: 'fantasy' }));
-                                  if (item.type === 'fantasy' && rfAnswers[item.id] !== 'fantasy') {
-                                    onAddCoins(10);
-                                  }
-                                }}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer ${
-                                  ans === 'fantasy'
-                                    ? item.type === 'fantasy'
-                                      ? 'bg-indigo-600 text-white shadow-xs'
-                                      : 'bg-rose-600 text-white shadow-xs'
-                                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200/85 hover:text-slate-900'
-                                }`}
-                              >
-                                Fantasy
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    <div className="p-4 bg-amber-50 rounded-xl border border-amber-100 flex gap-3 text-amber-900">
-                      <span className="material-symbols-outlined text-amber-700 shrink-0">task_alt</span>
-                      <div className="text-xs space-y-1">
-                        <p className="font-extrabold">Ready to Complete the Lesson?</p>
-                        <p className="text-amber-800 leading-relaxed">
-                          Tap the option buttons for all 5 cards! Once done, click <strong>Next Part</strong> down below to proceed to the Page 4 Post-Test check!
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-6 animate-in fade-in duration-200">
-                    <div className="w-full h-56 rounded-2xl overflow-hidden shadow-sm aspect-video">
-                      <img 
-                        src="https://lh3.googleusercontent.com/anywhere" 
-                        alt="Planted sprout nature" 
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.currentTarget.src = "https://lh3.googleusercontent.com/aida-public/AB6AXuAJyvH30uHe26QqhBfpDQuAHjwoyAs1BdvCupuu9Snf3yjhNLq2y3vT35OvoYoFyCU5aVXhCmVGSJ8rmHepnIAcFRkcXOURqyxc0ItCZRWS31xbLTwTRR4amXaHdh1l0mu6m_rNmI21EZ5SX11eafxQ4x9j79WVXaRBhtHf2amoGNcuw0r0EIL90HGJhzCzyC7ivJcYUHSVVgBlUmxEgECDMXhocbOjuErgQdmoJhW0mOVBc0xDGyEODHmMnUoPM_bjUaJzOvuTrqw";
-                        }}
-                      />
-                    </div>
-
-                    <div className="space-y-4">
-                      <p className="text-base font-medium text-slate-705 leading-relaxed">
-                        Every living thing relies on **Nutrient Cycles** to survive! Nitrogen, carbon dioxide, oxygen, and water flow seamlessly through the atmosphere and the ground.
-                      </p>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100">
-                          <span className="font-extrabold text-xs text-emerald-800 block">Carbon Cycle</span>
-                          <span className="text-[11px] text-emerald-700 block mt-0.5">Trees remove CO2 during carbon fixation, fueling crop expansion.</span>
-                        </div>
-                        <div className="p-4 bg-blue-50 rounded-xl border border-blue-100">
-                          <span className="font-extrabold text-xs text-blue-800 block">Water Cycle</span>
-                          <span className="text-[11px] text-blue-700 block mt-0.5">Water evaporates into vapors, clouds condense, returning as life-saving rainfall.</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )
-              )}
-
-              {activePartInfo.id === 3 && (
-                <div className="space-y-6 animate-in fade-in duration-200">
-                  <div className="bg-indigo-50 border border-indigo-100 p-6 rounded-2xl space-y-4">
-                    <div className="flex items-center gap-3">
-                      <span className="material-symbols-outlined text-indigo-700">psychology</span>
-                      <h4 className="font-extrabold text-base text-slate-800">
-                        Review Quiz: Ecosystem Quiz
-                      </h4>
-                    </div>
-                    
-                    <p className="text-sm font-semibold text-slate-700 font-sans">
-                      What is the primary energy driver that fuels photosynthesis in all producers?
-                    </p>
-
-                    <form onSubmit={handleQuizSubmit} className="space-y-3">
-                      <label className="flex items-center gap-3 p-3 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl cursor-pointer">
-                        <input 
-                          type="radio" 
-                          name="q-ans-def" 
-                          value="A" 
-                          checked={(quizAnswers[-1] || null) === 'A'} 
-                          onChange={(e) => setQuizAnswers(prev => ({ ...prev, [-1]: e.target.value }))}
-                          disabled={!!quizzesSubmitted[-1]}
-                          className="text-indigo-600 focus:ring-indigo-500 cursor-pointer"
-                        />
-                        <span className="text-xs font-bold text-slate-700">A) Solar Sunlight</span>
-                      </label>
-
-                      <label className="flex items-center gap-3 p-3 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl cursor-pointer">
-                        <input 
-                          type="radio" 
-                          name="q-ans-def" 
-                          value="B" 
-                          checked={(quizAnswers[-1] || null) === 'B'} 
-                          onChange={(e) => setQuizAnswers(prev => ({ ...prev, [-1]: e.target.value }))}
-                          disabled={!!quizzesSubmitted[-1]}
-                          className="text-indigo-600 focus:ring-indigo-500 cursor-pointer"
-                        />
-                        <span className="text-xs font-bold text-slate-700">B) Ocean Tides & Earthquakes</span>
-                      </label>
-
-                      <label className="flex items-center gap-3 p-3 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl cursor-pointer">
-                        <input 
-                          type="radio" 
-                          name="q-ans-def" 
-                          value="C" 
-                          checked={(quizAnswers[-1] || null) === 'C'} 
-                          onChange={(e) => setQuizAnswers(prev => ({ ...prev, [-1]: e.target.value }))}
-                          disabled={!!quizzesSubmitted[-1]}
-                          className="text-indigo-600 focus:ring-indigo-500 cursor-pointer"
-                        />
-                        <span className="text-xs font-bold text-slate-700">C) Falling Autumn Leaves</span>
-                      </label>
-
-                      {!quizzesSubmitted[-1] ? (
-                        <button 
-                          type="submit"
-                          className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-5 py-3 rounded-xl transition-all shadow-md mt-2 cursor-pointer"
-                        >
-                          Verify Answer
-                        </button>
-                      ) : (
-                        <div className="p-4 bg-emerald-50 rounded-xl text-emerald-800 text-xs font-semibold leading-relaxed font-sans">
-                          {quizFeedbacks[-1] || ''}
-                        </div>
-                      )}
-
-                      {!quizzesSubmitted[-1] && quizFeedbacks[-1] && (
-                        <div className="p-3.5 bg-rose-50 text-rose-800 text-xs font-bold rounded-xl font-sans">
-                          {quizFeedbacks[-1]}
-                        </div>
-                      )}
-                    </form>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Footer Navigation Buttons */}
         <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-100 flex justify-between items-center shrink-0">
