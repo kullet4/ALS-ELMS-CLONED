@@ -37,6 +37,7 @@ export interface Lesson {
   bucketUrl?: string; // Supabase/Firebase file storage URI
   assignedTo?: string; // Student name or group
   uploadedBy?: string; // Who added this lesson
+  uploadedByEmail?: string; // Teacher's email address
   sectionId?: string;  // Target section assigned to this lesson
   parts?: LessonPart[];
   quiz?: LessonQuiz;

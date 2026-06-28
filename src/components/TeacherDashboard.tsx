@@ -294,6 +294,7 @@ export default function TeacherDashboard({
         sectionId: supSection || undefined,
         assignedTo: supSection ? `Section: ${supSection}` : 'All Students',
         uploadedBy,
+        uploadedByEmail: currentUser?.email,
         parts: lessonParts,
         quiz: lessonQuizzes[0],
         quizzes: lessonQuizzes
@@ -316,7 +317,8 @@ export default function TeacherDashboard({
         sectionId: supSection || undefined,
         assignedTo: supSection ? `Section: ${supSection}` : 'All Students',
         bucketUrl: supBucketUrl.trim(),
-        uploadedBy
+        uploadedBy,
+        uploadedByEmail: currentUser?.email
       };
     }
 

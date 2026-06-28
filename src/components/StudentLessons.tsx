@@ -6,9 +6,10 @@ interface StudentLessonsProps {
   onSelectLesson: (lesson: Lesson) => void;
   lessons: Lesson[];
   currentUser?: UserAccount;
+  accounts: UserAccount[];
 }
 
-export default function StudentLessons({ onTabChange, onSelectLesson, lessons, currentUser }: StudentLessonsProps) {
+export default function StudentLessons({ onTabChange, onSelectLesson, lessons, currentUser, accounts }: StudentLessonsProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
@@ -37,13 +38,35 @@ export default function StudentLessons({ onTabChange, onSelectLesson, lessons, c
     ? [...new Set(enrolledSubjects.map(s => subjectCategoryMap[s] ?? s))]
     : ['LS1 English', 'LS1 Filipino', 'LS2 Science', 'LS3 Mathematics', 'LS4 Life Skills', 'LS5 Culture & Society', 'LS6 Digital Literacy'];
 
+  // Check section alignment based on teacher-student relationship and sectionId target
+  const isLessonSectionAllowed = (l: Lesson) => {
+    if (l.uploadedByEmail) {
+      const publisher = accounts.find(a => a.email.toLowerCase() === l.uploadedByEmail!.toLowerCase());
+      if (publisher) {
+        const teacherSections = [
+          ...(publisher.sections ?? []),
+          ...(publisher.assignedSections ?? []),
+          ...(publisher.section ? [publisher.section] : [])
+        ];
+        const studentSection = currentUser?.section || '';
+        const isTeacherForStudent = teacherSections.includes(studentSection);
+        
+        if (!isTeacherForStudent) {
+          return false;
+        }
+        
+        return !l.sectionId || l.sectionId === studentSection;
+      }
+    }
+    return !l.sectionId || l.sectionId === currentUser?.section;
+  };
+
   // Filter lessons based on category selection, search query, and enrolled subjects
   const filteredLessons = lessons.filter(l => {
     if (l.id === 'learning-active') return false;
     if (l.assignedTo?.includes('Teachers')) return false;
 
-    // Check section assignment if specified
-    const sectionAllowed = !l.sectionId || l.sectionId === currentUser?.section;
+    const sectionAllowed = isLessonSectionAllowed(l);
 
     // Only show lessons that belong to enrolled subjects (if subjects are assigned)
     const subjectAllowed = enrolledSubjects.length === 0 || enrolledCategories.includes(l.category);
@@ -59,7 +82,7 @@ export default function StudentLessons({ onTabChange, onSelectLesson, lessons, c
     lessons.filter(l =>
       l.id !== 'learning-active' &&
       !l.assignedTo?.includes('Teachers') &&
-      (!l.sectionId || l.sectionId === currentUser?.section) &&
+      isLessonSectionAllowed(l) &&
       l.category === cat &&
       (enrolledSubjects.length === 0 || enrolledCategories.includes(cat))
     ).length;

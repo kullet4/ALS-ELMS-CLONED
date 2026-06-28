@@ -577,6 +577,7 @@ export default function App() {
                     onSelectLesson={handleSelectLesson}
                     lessons={lessons}
                     currentUser={currentUser}
+                    accounts={accounts}
                   />
                 )}
 
