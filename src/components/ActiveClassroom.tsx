@@ -23,16 +23,45 @@ export function normalizeImageUrl(url: string | undefined, category?: string): s
     return categoryDefaults[category || ''] || categoryDefaults.default;
   }
   
-  // Convert standard Unsplash photo web page links to raw CDN links so they load in standard <img> tags
+  // --- Unsplash: convert web page URLs → CDN image URLs ---
+  // e.g. https://unsplash.com/photos/some-slug-PHOTOID  →  https://images.unsplash.com/photo-PHOTOID?...
   const unsplashPageRegex = /unsplash\.com\/photos\/([a-zA-Z0-9\-_]+)/;
-  const match = trimmed.match(unsplashPageRegex);
-  if (match && match[1]) {
-    const rawPhotoId = match[1];
+  const unsplashMatch = trimmed.match(unsplashPageRegex);
+  if (unsplashMatch && unsplashMatch[1]) {
+    const rawPhotoId = unsplashMatch[1];
     const segments = rawPhotoId.split('-');
     const finalPhotoId = segments[segments.length - 1] || rawPhotoId;
     return `https://images.unsplash.com/photo-${finalPhotoId}?auto=format&fit=crop&w=1200&q=80`;
   }
-  
+
+  // --- Unsplash CDN: ensure proper sizing params are present ---
+  // e.g. https://images.unsplash.com/photo-XXXX  (no params)
+  if (trimmed.includes('images.unsplash.com') && !trimmed.includes('auto=format')) {
+    const separator = trimmed.includes('?') ? '&' : '?';
+    return `${trimmed}${separator}auto=format&fit=crop&w=1200&q=80`;
+  }
+
+  // --- Pexels: convert photo page URLs → direct CDN image URL ---
+  // e.g. https://www.pexels.com/photo/some-title-PHOTOID/
+  const pexelsPageRegex = /pexels\.com\/photo\/(?:[a-zA-Z0-9\-]*?-)?([0-9]+)\/?$/;
+  const pexelsMatch = trimmed.match(pexelsPageRegex);
+  if (pexelsMatch && pexelsMatch[1]) {
+    return `https://images.pexels.com/photos/${pexelsMatch[1]}/pexels-photo-${pexelsMatch[1]}.jpeg?auto=compress&cs=tinysrgb&w=1200`;
+  }
+
+  // --- Pexels CDN: already a direct image link, ensure it has sizing params ---
+  if (trimmed.includes('images.pexels.com') && !trimmed.includes('auto=compress')) {
+    const separator = trimmed.includes('?') ? '&' : '?';
+    return `${trimmed}${separator}auto=compress&cs=tinysrgb&w=1200`;
+  }
+
+  // --- Pixabay: convert photo page URLs → CDN link via their API format ---
+  // Direct Pixabay CDN links (cdn.pixabay.com) work as-is; page links don't
+  // We can't convert page → CDN without an API key, so return as-is and let onError handle it
+
+  // --- Wikimedia / Wikipedia Commons: ensure direct file URL is used ---
+  // e.g. https://upload.wikimedia.org/... works fine as-is
+
   return trimmed;
 }
 
@@ -328,27 +357,29 @@ export default function ActiveClassroom({ lesson, onAddCoins, onClose }: ActiveC
                 {rawUrl && (
                   <div className="w-full h-56 rounded-2xl overflow-hidden shadow-sm aspect-video relative bg-slate-50">
                     {isError ? (
-                      <div className="w-full h-full relative group">
-                        <img 
-                          src={normalizeImageUrl('random', lesson.category)} 
-                          alt="Category fallback" 
-                          className="w-full h-full object-cover filter brightness-[0.4]"
-                        />
-                        <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center text-white">
-                          <span className="material-symbols-outlined text-[#FF9800] text-3xl mb-1.5">image_not_supported</span>
-                          <h4 className="text-xs font-black tracking-tight text-white">Hotlink Preview Blocked by Domain</h4>
-                          <p className="text-[10px] text-slate-300 max-w-sm mt-1 leading-normal font-sans">
-                            Direct reference URL has premium website protection. However, we have loaded a gorgeous safe <strong>{lesson.category}</strong> cover context for you!
-                          </p>
-                        </div>
-                      </div>
+                      <img 
+                        src={normalizeImageUrl('random', lesson.category)} 
+                        alt="Category fallback" 
+                        className="w-full h-full object-cover"
+                        referrerPolicy="no-referrer"
+                      />
                     ) : (
                       <img 
                         src={normalizedUrl} 
                         alt={lessonParts[activePartInfo.slideIndex!].title} 
                         className="w-full h-full object-cover"
                         referrerPolicy="no-referrer"
-                        onError={() => {
+                        crossOrigin="anonymous"
+                        onError={(e) => {
+                          // Stage 1: if the normalized URL failed, try stripping query params
+                          // (some CDNs reject certain param combos but accept the bare URL)
+                          const target = e.currentTarget;
+                          const bareUrl = normalizedUrl.split('?')[0];
+                          if (target.src !== bareUrl && bareUrl !== normalizedUrl) {
+                            target.src = bareUrl;
+                            return;
+                          }
+                          // Stage 2: fall back to category default
                           if (rawUrl) {
                             setImageErrors(prev => ({ ...prev, [rawUrl]: true }));
                           }

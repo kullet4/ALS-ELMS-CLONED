@@ -31,6 +31,14 @@ interface SessionState {
   name: string;
 }
 
+const studentTabLabels: Record<StudentTab, string> = {
+  home: 'Home Dashboard',
+  lessons: 'Lessons Browser',
+  progress: 'Progress Tracker',
+  profile: 'Goals & Settings',
+  learning: 'Active Classroom'
+};
+
 export default function App() {
   const [lessons, setLessons] = useState<Lesson[]>(MOCK_LESSONS);
   const [accounts, setAccounts] = useState<UserAccount[]>(DEFAULT_ACCOUNTS);
@@ -527,7 +535,7 @@ export default function App() {
             <div className="md:hidden bg-white border-b border-slate-155 p-3 px-6 select-none shrink-0 sticky top-[73px] z-30 flex items-center justify-between shadow-sm">
               <span className="font-black text-xs text-slate-700 capitalize flex items-center gap-2">
                 <span className="material-symbols-outlined text-sm">label</span>
-                Student Node: {studentTab === 'learning' ? 'Ecology Classroom' : studentTab}
+                Student Node: {studentTabLabels[studentTab]}
               </span>
 
               <div className="flex gap-2">
@@ -547,7 +555,7 @@ export default function App() {
                 <button onClick={() => { setStudentTab('lessons'); setMobileMenuOpen(false); }} className={`w-full p-3 font-bold text-left text-xs text-slate-700 rounded-xl ${studentTab === 'lessons' ? 'bg-indigo-50 text-indigo-700' : ''}`}>Lessons Browser</button>
                 <button onClick={() => { setStudentTab('progress'); setMobileMenuOpen(false); }} className={`w-full p-3 font-bold text-left text-xs text-slate-700 rounded-xl ${studentTab === 'progress' ? 'bg-indigo-50 text-indigo-700' : ''}`}>Progress Tracker</button>
                 <button onClick={() => { setStudentTab('profile'); setMobileMenuOpen(false); }} className={`w-full p-3 font-bold text-left text-xs text-slate-700 rounded-xl ${studentTab === 'profile' ? 'bg-indigo-50 text-indigo-700' : ''}`}>Goals & Settings</button>
-                <button onClick={() => { setStudentTab('learning'); setMobileMenuOpen(false); }} className={`w-full p-3 font-bold text-left text-xs text-slate-700 rounded-xl ${studentTab === 'learning' ? 'bg-indigo-50 text-indigo-700' : ''}`}>Ecology Classroom</button>
+                <button onClick={() => { setStudentTab('learning'); setMobileMenuOpen(false); }} className={`w-full p-3 font-bold text-left text-xs text-slate-700 rounded-xl ${studentTab === 'learning' ? 'bg-indigo-50 text-indigo-700' : ''}`}>Active Classroom</button>
               </div>
             )}
           </>
