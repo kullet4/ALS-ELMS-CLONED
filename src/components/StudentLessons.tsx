@@ -72,11 +72,28 @@ export default function StudentLessons({ onTabChange, onSelectLesson, lessons, c
     const sectionAllowed = isLessonSectionAllowed(l);
 
     // Only show lessons that belong to enrolled subjects (if subjects are assigned)
-    const subjectAllowed = enrolledSubjects.length === 0 || enrolledCategories.includes(l.category);
-    const matchesCategory = selectedCategory ? l.category === selectedCategory : true;
+    const lessonCategoryMapped = subjectCategoryMap[l.category] ?? l.category;
+    const subjectAllowed = enrolledSubjects.length === 0 || enrolledCategories.includes(lessonCategoryMapped);
+    const matchesCategory = selectedCategory ? lessonCategoryMapped === selectedCategory : true;
     const matchesSearch = l.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           l.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          l.category.toLowerCase().includes(searchQuery.toLowerCase());
+                          lessonCategoryMapped.toLowerCase().includes(searchQuery.toLowerCase());
+                          
+    console.log(`[Diagnostic] Lesson "${l.title}":`, {
+      sectionAllowed,
+      subjectAllowed,
+      matchesCategory,
+      matchesSearch,
+      details: {
+        lessonSectionId: l.sectionId,
+        studentSection: currentUser?.section,
+        uploadedByEmail: l.uploadedByEmail,
+        category: l.category,
+        lessonCategoryMapped,
+        enrolledCategories
+      }
+    });
+
     return sectionAllowed && subjectAllowed && matchesCategory && matchesSearch;
   });
 
@@ -86,7 +103,7 @@ export default function StudentLessons({ onTabChange, onSelectLesson, lessons, c
       l.id !== 'learning-active' &&
       !l.assignedTo?.includes('Teachers') &&
       isLessonSectionAllowed(l) &&
-      l.category === cat &&
+      (subjectCategoryMap[l.category] ?? l.category) === cat &&
       (enrolledSubjects.length === 0 || enrolledCategories.includes(cat))
     ).length;
 
