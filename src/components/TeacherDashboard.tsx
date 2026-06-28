@@ -262,7 +262,7 @@ export default function TeacherDashboard({
           content: slide.content.trim(),
           icon: idx === 0 ? 'auto_stories' : idx % 2 === 1 ? 'school' : 'psychology'
         };
-        const trimmedImageUrl = slide.imageUrl.trim();
+        const trimmedImageUrl = slide.imageUrl?.trim();
         if (trimmedImageUrl) part.imageUrl = trimmedImageUrl;
         return part;
       });

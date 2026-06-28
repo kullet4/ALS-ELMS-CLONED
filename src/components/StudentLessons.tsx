@@ -48,11 +48,14 @@ export default function StudentLessons({ onTabChange, onSelectLesson, lessons, c
           ...(publisher.assignedSections ?? []),
           ...(publisher.section ? [publisher.section] : [])
         ];
+        const activeSections = [...new Set(teacherSections.filter(Boolean))];
         const studentSection = currentUser?.section || '';
-        const isTeacherForStudent = teacherSections.includes(studentSection);
         
-        if (!isTeacherForStudent) {
-          return false;
+        if (activeSections.length > 0) {
+          const isTeacherForStudent = activeSections.includes(studentSection);
+          if (!isTeacherForStudent) {
+            return false;
+          }
         }
         
         return !l.sectionId || l.sectionId === studentSection;
