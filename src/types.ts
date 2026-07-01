@@ -1,6 +1,6 @@
 export type PortalType = 'student' | 'teacher' | 'admin';
 
-export type StudentTab = 'home' | 'lessons' | 'progress' | 'profile' | 'learning';
+export type StudentTab = 'home' | 'lessons' | 'assignments' | 'progress' | 'profile' | 'learning';
 
 export interface ChatMessage {
   id: string;
@@ -110,3 +110,28 @@ export interface StudentGrade {
   score: number; // 0-100
 }
 
+export interface Assignment {
+  id: string;
+  title: string;
+  description: string;
+  subject: string;
+  sectionId?: string; // target section, empty = all sections
+  dueDate: string; // YYYY-MM-DD
+  maxScore: number;
+  uploadedBy: string;
+  uploadedByEmail?: string;
+  createdAt: string; // ISO timestamp
+  attachmentUrl?: string;
+  status?: 'open' | 'closed';
+}
+
+export interface AssignmentSubmission {
+  id: string;
+  assignmentId: string;
+  studentEmail: string;
+  studentName: string;
+  submittedAt: string; // ISO timestamp
+  score?: number;
+  feedback?: string;
+  status: 'submitted' | 'graded' | 'late';
+}

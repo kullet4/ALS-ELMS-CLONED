@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-import { Lesson, UserAccount, AttendanceRecord, StudentGrade } from '../types';
+import { Lesson, UserAccount, AttendanceRecord, StudentGrade, Assignment } from '../types';
 import { db } from '../firebase';
 import { doc, setDoc } from 'firebase/firestore';
 
@@ -13,6 +13,9 @@ interface TeacherDashboardProps {
   grades: StudentGrade[];
   currentUser?: UserAccount;
   onSaveAttendance?: (record: AttendanceRecord) => void;
+  assignments: Assignment[];
+  onAddAssignment: (a: Assignment) => void;
+  onRemoveAssignment: (id: string) => void;
 }
 
 interface BuilderSlideInput {
@@ -82,12 +85,15 @@ export default function TeacherDashboard({
   attendance,
   grades,
   currentUser,
-  onSaveAttendance
+  onSaveAttendance,
+  assignments,
+  onAddAssignment,
+  onRemoveAssignment
 }: TeacherDashboardProps) {
 
   const [notification, setNotification] = useState<string | null>(null);
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'attendance' | 'analytics' | 'content'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'attendance' | 'analytics' | 'content' | 'assignments'>('overview');
   const [filterSubject, setFilterSubject] = useState('LS1 English - Communication Skills');
   const [filterSection, setFilterSection] = useState('Section A');
   const [filterDate, setFilterDate] = useState(() => {
@@ -512,6 +518,22 @@ export default function TeacherDashboard({
         >
           <span className="material-symbols-outlined text-[18px]">edit_note</span>
           Content Builder
+        </button>
+        <button
+          onClick={() => setActiveTab('assignments')}
+          className={`px-5 py-2.5 font-black text-xs uppercase tracking-wider transition-all border-b-2 cursor-pointer flex items-center gap-2 ${
+            activeTab === 'assignments'
+              ? 'border-indigo-600 text-indigo-600'
+              : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+          }`}
+        >
+          <span className="material-symbols-outlined text-[18px]">assignment</span>
+          Assignments
+          {assignments.length > 0 && (
+            <span className="bg-indigo-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full leading-none">
+              {assignments.length}
+            </span>
+          )}
         </button>
       </div>
 
@@ -1260,6 +1282,333 @@ export default function TeacherDashboard({
         </section>
       )}
 
+      {/* ── Assignments Tab ── */}
+      {activeTab === 'assignments' && (
+        <AssignmentsPanel
+          accounts={accounts}
+          teacherSubjects={teacherSubjects}
+          teacherSections={teacherSections}
+          currentUser={currentUser}
+          assignments={assignments}
+          onAddAssignment={onAddAssignment}
+          onRemoveAssignment={onRemoveAssignment}
+          onNotify={(msg) => { setNotification(msg); setTimeout(() => setNotification(null), 4500); }}
+        />
+      )}
+
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* Assignments sub-panel (extracted to keep state clean)                       */
+/* ─────────────────────────────────────────────────────────────────────────── */
+
+interface AssignmentsPanelProps {
+  accounts: UserAccount[];
+  teacherSubjects: string[];
+  teacherSections: string[];
+  currentUser?: UserAccount;
+  assignments: Assignment[];
+  onAddAssignment: (a: Assignment) => void;
+  onRemoveAssignment: (id: string) => void;
+  onNotify: (msg: string) => void;
+}
+
+function AssignmentsPanel({
+  accounts,
+  teacherSubjects,
+  teacherSections,
+  currentUser,
+  assignments,
+  onAddAssignment,
+  onRemoveAssignment,
+  onNotify,
+}: AssignmentsPanelProps) {
+  const today = new Date().toISOString().split('T')[0];
+
+  const [aTitle, setATitle] = useState('');
+  const [aSubject, setASubject] = useState(teacherSubjects[0] ?? '');
+  const [aSection, setASection] = useState('');
+  const [aDueDate, setADueDate] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 7);
+    return d.toISOString().split('T')[0];
+  });
+  const [aMaxScore, setAMaxScore] = useState('100');
+  const [aDescription, setADescription] = useState('');
+  const [aAttachmentUrl, setAAttachmentUrl] = useState('');
+
+  const myAssignments = assignments.filter(
+    (a) => a.uploadedByEmail === currentUser?.email
+  );
+
+  const handlePost = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!aTitle.trim()) { onNotify('Please enter an assignment title. ⚠️'); return; }
+    if (!aDueDate) { onNotify('Please select a due date. ⚠️'); return; }
+
+    const newAssignment: Assignment = {
+      id: `asgn-${Date.now()}`,
+      title: aTitle.trim(),
+      description: aDescription.trim(),
+      subject: aSubject,
+      sectionId: aSection || undefined,
+      dueDate: aDueDate,
+      maxScore: parseInt(aMaxScore) || 100,
+      uploadedBy: currentUser?.name ?? 'Teacher',
+      uploadedByEmail: currentUser?.email,
+      createdAt: new Date().toISOString(),
+      attachmentUrl: aAttachmentUrl.trim() || undefined,
+      status: 'open',
+    };
+
+    onAddAssignment(newAssignment);
+    setATitle('');
+    setADescription('');
+    setAAttachmentUrl('');
+    onNotify(`Assignment "${newAssignment.title}" posted to students! 📋`);
+  };
+
+  const getDueLabel = (dueDate: string) => {
+    const due = new Date(dueDate);
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const diff = Math.round((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    if (diff < 0) return { label: `${Math.abs(diff)}d Overdue`, cls: 'bg-rose-50 text-rose-600 border-rose-200' };
+    if (diff === 0) return { label: 'Due Today', cls: 'bg-amber-50 text-amber-600 border-amber-200' };
+    if (diff === 1) return { label: 'Due Tomorrow', cls: 'bg-amber-50 text-amber-500 border-amber-100' };
+    return { label: `${diff}d left`, cls: 'bg-emerald-50 text-emerald-600 border-emerald-200' };
+  };
+
+  const enrolledStudentsForAssignment = (a: Assignment) =>
+    accounts.filter((acc) => {
+      if (acc.role !== 'student') return false;
+      if (a.sectionId && acc.section !== a.sectionId) return false;
+      if (acc.subjects && !acc.subjects.includes(a.subject)) return false;
+      return true;
+    });
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-200">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h3 className="text-lg font-black text-slate-800">Assignments</h3>
+          <p className="text-xs text-slate-450 mt-0.5">
+            Create and manage assignments. Students see them in their <strong>Assignments</strong> tab.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 bg-indigo-50 border border-indigo-100 px-3.5 py-2 rounded-xl">
+          <span className="material-symbols-outlined text-indigo-600 text-sm">assignment</span>
+          <span className="text-xs font-black text-indigo-800">{myAssignments.length} Posted</span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+
+        {/* ── Create Form ── */}
+        <form
+          onSubmit={handlePost}
+          className="lg:col-span-2 bg-white border border-slate-150 rounded-2xl p-6 shadow-sm space-y-4 self-start"
+        >
+          <h4 className="font-black text-xs text-slate-500 uppercase tracking-wider pb-2 border-b border-slate-100 flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-[16px] text-indigo-600">post_add</span>
+            New Assignment
+          </h4>
+
+          {/* Title */}
+          <div>
+            <label className="text-[10px] font-black text-slate-500 uppercase block mb-1">Assignment Title *</label>
+            <input
+              value={aTitle}
+              onChange={(e) => setATitle(e.target.value)}
+              placeholder="e.g. Problem Set 3 – Fractions"
+              className="w-full bg-slate-50 border border-slate-200 focus:border-indigo-400 rounded-xl p-2.5 text-xs outline-none font-semibold text-slate-800"
+            />
+          </div>
+
+          {/* Subject */}
+          <div>
+            <label className="text-[10px] font-black text-slate-500 uppercase block mb-1">Subject *</label>
+            <select
+              value={aSubject}
+              onChange={(e) => setASubject(e.target.value)}
+              className="w-full bg-slate-50 border border-slate-200 focus:border-indigo-400 rounded-xl p-2.5 text-xs outline-none font-semibold text-slate-800"
+            >
+              {teacherSubjects.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Section */}
+          <div>
+            <label className="text-[10px] font-black text-slate-500 uppercase block mb-1">Target Section</label>
+            <select
+              value={aSection}
+              onChange={(e) => setASection(e.target.value)}
+              className="w-full bg-slate-50 border border-slate-200 focus:border-indigo-400 rounded-xl p-2.5 text-xs outline-none font-semibold text-slate-800"
+            >
+              <option value="">All Sections</option>
+              {teacherSections.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Due Date + Max Score */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-[10px] font-black text-slate-500 uppercase block mb-1">Due Date *</label>
+              <input
+                type="date"
+                min={today}
+                value={aDueDate}
+                onChange={(e) => setADueDate(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 focus:border-indigo-400 rounded-xl p-2.5 text-xs outline-none font-semibold text-slate-700"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-black text-slate-500 uppercase block mb-1">Max Score (pts)</label>
+              <input
+                type="number"
+                min={1}
+                max={999}
+                value={aMaxScore}
+                onChange={(e) => setAMaxScore(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 focus:border-indigo-400 rounded-xl p-2.5 text-xs outline-none font-semibold text-slate-800"
+              />
+            </div>
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="text-[10px] font-black text-slate-500 uppercase block mb-1">Instructions / Description</label>
+            <textarea
+              value={aDescription}
+              onChange={(e) => setADescription(e.target.value)}
+              placeholder="Describe what students need to do…"
+              rows={3}
+              className="w-full bg-slate-50 border border-slate-200 focus:border-indigo-400 rounded-xl p-2.5 text-xs outline-none font-semibold text-slate-800 resize-none"
+            />
+          </div>
+
+          {/* Attachment URL */}
+          <div>
+            <label className="text-[10px] font-black text-slate-500 uppercase block mb-1">Attachment URL (optional)</label>
+            <input
+              value={aAttachmentUrl}
+              onChange={(e) => setAAttachmentUrl(e.target.value)}
+              placeholder="https://drive.google.com/…"
+              className="w-full bg-slate-50 border border-slate-200 focus:border-indigo-400 rounded-xl p-2.5 text-xs outline-none font-semibold text-slate-800"
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="w-full py-3 bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-black text-xs rounded-xl shadow-md tracking-wider uppercase flex items-center justify-center gap-2 hover:from-indigo-700 hover:to-purple-700 active:scale-[0.99] transition-all cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-sm">send</span>
+            Post Assignment to Students
+          </button>
+        </form>
+
+        {/* ── Posted Assignments List ── */}
+        <div className="lg:col-span-3 space-y-4">
+          <h4 className="font-extrabold text-xs text-slate-500 uppercase tracking-wider">My Posted Assignments</h4>
+
+          {myAssignments.length === 0 ? (
+            <div className="p-10 border-2 border-dashed border-slate-150 rounded-2xl text-center text-slate-400">
+              <span className="material-symbols-outlined text-4xl mb-2 block">assignment</span>
+              <p className="text-xs font-semibold">No assignments posted yet.</p>
+              <p className="text-[10px] text-slate-400 mt-1">Use the form to create and post your first assignment.</p>
+            </div>
+          ) : (
+            <div className="space-y-3 max-h-[680px] overflow-y-auto pr-1">
+              {[...myAssignments].reverse().map((a) => {
+                const due = getDueLabel(a.dueDate);
+                const enrolled = enrolledStudentsForAssignment(a);
+                return (
+                  <div key={a.id} className="bg-white border border-slate-150 rounded-2xl p-5 shadow-sm space-y-3 hover:shadow-md transition-all">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap gap-1.5 mb-1.5">
+                          <span className="inline-flex px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-indigo-50 text-indigo-700 border border-indigo-100">
+                            {a.subject}
+                          </span>
+                          {a.sectionId ? (
+                            <span className="inline-flex px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-emerald-50 text-emerald-700 border border-emerald-100">
+                              {a.sectionId}
+                            </span>
+                          ) : (
+                            <span className="inline-flex px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-slate-100 text-slate-600 border border-slate-200">
+                              All Sections
+                            </span>
+                          )}
+                          <span className={`inline-flex px-2 py-0.5 rounded-md text-[9px] font-black border ${due.cls}`}>
+                            {due.label}
+                          </span>
+                        </div>
+                        <h5 className="font-black text-sm text-slate-800 leading-snug">{a.title}</h5>
+                      </div>
+                      <button
+                        onClick={() => onRemoveAssignment(a.id)}
+                        className="text-slate-400 hover:text-rose-600 p-1 rounded hover:bg-slate-100 transition-colors cursor-pointer shrink-0"
+                        title="Delete Assignment"
+                      >
+                        <span className="material-symbols-outlined text-sm">delete</span>
+                      </button>
+                    </div>
+
+                    {a.description && (
+                      <p className="text-[11px] text-slate-500 leading-relaxed">{a.description}</p>
+                    )}
+
+                    <div className="flex flex-wrap items-center gap-3 text-[10px] text-slate-400 font-semibold border-t border-slate-100 pt-3">
+                      <span className="flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[13px]">calendar_today</span>
+                        Due: {a.dueDate}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[13px]">grade</span>
+                        {a.maxScore} pts
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[13px]">group</span>
+                        {enrolled.length} student{enrolled.length !== 1 ? 's' : ''}
+                      </span>
+                      {a.attachmentUrl && (
+                        <a
+                          href={a.attachmentUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center gap-1 text-indigo-600 hover:text-indigo-800 underline underline-offset-2"
+                        >
+                          <span className="material-symbols-outlined text-[13px]">attach_file</span>
+                          Attachment
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Info banner */}
+          <div className="p-4 bg-indigo-50 rounded-xl border border-indigo-100 text-indigo-800">
+            <h5 className="font-extrabold text-[11px] uppercase tracking-wider flex items-center gap-1.5 text-indigo-900 mb-1">
+              <span className="material-symbols-outlined text-xs">info</span>
+              Where do students see assignments?
+            </h5>
+            <p className="text-[10px] leading-relaxed text-indigo-800">
+              Assignments you post here appear immediately in the student's <strong>Assignments</strong> sidebar tab, filtered by their section and enrolled subjects.
+            </p>
+          </div>
+        </div>
+
+      </div>
     </div>
   );
 }

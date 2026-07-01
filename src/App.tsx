@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { PortalType, StudentTab, Lesson, UserAccount, AttendanceRecord, StudentGrade } from './types';
+import { PortalType, StudentTab, Lesson, UserAccount, AttendanceRecord, StudentGrade, Assignment } from './types';
 import StudentHome from './components/StudentHome';
 import StudentLessons from './components/StudentLessons';
+import StudentAssignments from './components/StudentAssignments';
 import StudentProgress from './components/StudentProgress';
 import StudentProfile from './components/StudentProfile';
 import TeacherDashboard from './components/TeacherDashboard';
@@ -34,6 +35,7 @@ interface SessionState {
 const studentTabLabels: Record<StudentTab, string> = {
   home: 'Home Dashboard',
   lessons: 'Lessons Browser',
+  assignments: 'Assignments',
   progress: 'Progress Tracker',
   profile: 'Goals & Settings',
   learning: 'Active Classroom'
@@ -44,6 +46,7 @@ export default function App() {
   const [accounts, setAccounts] = useState<UserAccount[]>(DEFAULT_ACCOUNTS);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [grades, setGrades] = useState<StudentGrade[]>([]);
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [session, setSession] = useState<SessionState | null>(() => {
     const saved = localStorage.getItem('als_session');
     return saved ? JSON.parse(saved) : null;
@@ -339,6 +342,19 @@ export default function App() {
     setLessons(prev => prev.filter(l => l.id !== id));
   };
 
+  const handleAddAssignment = (newAssignment: Assignment) => {
+    setAssignments(prev => {
+      if (prev.some(a => a.id === newAssignment.id)) {
+        return prev.map(a => a.id === newAssignment.id ? newAssignment : a);
+      }
+      return [...prev, newAssignment];
+    });
+  };
+
+  const handleRemoveAssignment = (id: string) => {
+    setAssignments(prev => prev.filter(a => a.id !== id));
+  };
+
   const handleAddAccount = async (newAcc: UserAccount) => {
     try {
       await setDoc(doc(db, 'users', newAcc.email.toLowerCase()), newAcc);
@@ -500,6 +516,15 @@ export default function App() {
                   </button>
 
                   <button
+                    onClick={() => setStudentTab('assignments')}
+                    className={`w-full p-3 rounded-xl text-xs font-black flex items-center gap-3 cursor-pointer transition-all ${studentTab === 'assignments' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+                      }`}
+                  >
+                    <span className="material-symbols-outlined text-[18px]">assignment</span>
+                    Assignments
+                  </button>
+
+                  <button
                     onClick={() => setStudentTab('progress')}
                     className={`w-full p-3 rounded-xl text-xs font-black flex items-center gap-3 cursor-pointer transition-all ${studentTab === 'progress' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
                       }`}
@@ -553,6 +578,7 @@ export default function App() {
               <div className="md:hidden bg-white border-b border-slate-155 p-4 space-y-2 absolute top-[125px] left-0 right-0 z-20 shadow-lg animation-slide-in">
                 <button onClick={() => { setStudentTab('home'); setMobileMenuOpen(false); }} className={`w-full p-3 font-bold text-left text-xs text-slate-700 rounded-xl ${studentTab === 'home' ? 'bg-indigo-50 text-indigo-700' : ''}`}>Home Dashboard</button>
                 <button onClick={() => { setStudentTab('lessons'); setMobileMenuOpen(false); }} className={`w-full p-3 font-bold text-left text-xs text-slate-700 rounded-xl ${studentTab === 'lessons' ? 'bg-indigo-50 text-indigo-700' : ''}`}>Lessons Browser</button>
+                <button onClick={() => { setStudentTab('assignments'); setMobileMenuOpen(false); }} className={`w-full p-3 font-bold text-left text-xs text-slate-700 rounded-xl ${studentTab === 'assignments' ? 'bg-indigo-50 text-indigo-700' : ''}`}>Assignments</button>
                 <button onClick={() => { setStudentTab('progress'); setMobileMenuOpen(false); }} className={`w-full p-3 font-bold text-left text-xs text-slate-700 rounded-xl ${studentTab === 'progress' ? 'bg-indigo-50 text-indigo-700' : ''}`}>Progress Tracker</button>
                 <button onClick={() => { setStudentTab('profile'); setMobileMenuOpen(false); }} className={`w-full p-3 font-bold text-left text-xs text-slate-700 rounded-xl ${studentTab === 'profile' ? 'bg-indigo-50 text-indigo-700' : ''}`}>Goals & Settings</button>
                 <button onClick={() => { setStudentTab('learning'); setMobileMenuOpen(false); }} className={`w-full p-3 font-bold text-left text-xs text-slate-700 rounded-xl ${studentTab === 'learning' ? 'bg-indigo-50 text-indigo-700' : ''}`}>Active Classroom</button>
@@ -586,6 +612,13 @@ export default function App() {
                     lessons={lessons}
                     currentUser={currentUser}
                     accounts={accounts}
+                  />
+                )}
+
+                {studentTab === 'assignments' && (
+                  <StudentAssignments
+                    assignments={assignments}
+                    currentUser={currentUser}
                   />
                 )}
 
@@ -624,6 +657,9 @@ export default function App() {
               grades={grades}
               currentUser={accounts.find(a => a.email.toLowerCase() === session.email.toLowerCase())}
               onSaveAttendance={handleSaveAttendanceLocal}
+              assignments={assignments}
+              onAddAssignment={handleAddAssignment}
+              onRemoveAssignment={handleRemoveAssignment}
             />
           )}
 
